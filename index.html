@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12 Degrees — Bath & Body Works & Skincare Store in Awka</title>
+    <meta name="description"
+        content="Your best stop for all Bath and Body Works products, perfumes, body lotions, body scrubs, oils, intimate care and hair care in Awka, Anambra State. Shop online.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Firebase SDK Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+                "firebase/analytics": "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+                "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Local file protocol warning banner -->
+    <div id="file-protocol-warning"
+        style="display: none; background: #e60012; color: white; padding: 12px 24px; text-align: center; font-size: 14px; font-weight: 600; position: fixed; top: 0; left: 0; right: 0; z-index: 100000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;">
+        ⚠️ Local file protocol (file://) detected. Browsers block database features when opened directly. Please use:
+        <a href="http://localhost:8080/index.html"
+            style="color: white; text-decoration: underline; margin-left: 8px;">http://localhost:8080/index.html</a>
+    </div>
+    <script>
+        if (window.location.protocol === 'file:') {
+            document.getElementById('file-protocol-warning').style.display = 'block';
+        }
+    </script>
+
+    <!-- Announcement Ticker -->
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>Free delivery in Awka on orders above ₦15,000</span>
+            <span class="ticker-dot">◆</span>
+            <span>100% Authentic Bath & Body Works Products</span>
+            <span class="ticker-dot">◆</span>
+            <span>Same-day delivery available — WhatsApp 09029819153</span>
+            <span class="ticker-dot">◆</span>
+            <span>Free delivery in Awka on orders above ₦15,000</span>
+            <span class="ticker-dot">◆</span>
+            <span>100% Authentic Bath & Body Works Products</span>
+            <span class="ticker-dot">◆</span>
+            <span>Same-day delivery available — WhatsApp 09029819153</span>
+        </div>
+    </div>
+
+    <!-- Header / Navigation Bar -->
+    <header id="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="12 Degrees Logo" class="logo-img">
+            </a>
+
+            <nav id="navbar-links">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="shop.html" class="nav-link">Shop</a>
+                <a href="#features" class="nav-link">Why Us</a>
+                <a href="#about" class="nav-link">Find Us</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Dark Mode">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="display:none;">
+                        <circle cx="12" cy="12" r="4" />
+                        <path
+                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    </svg>
+                </button>
+                <button class="cart-toggle" id="cart-toggle-btn" aria-label="Open Cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <span class="cart-count" id="cart-count-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home" data-active-mood="floral">
+
+        <!-- Full-screen background image carousel -->
+        <div class="hero-carousel" id="hero-carousel">
+            <div class="carousel-slide active"
+                style="background-image: url('https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1608248597481-496100c80836?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+            <div class="carousel-slide"
+                style="background-image: url('https://images.unsplash.com/photo-1617897903246-719242758050?q=90&w=1920&auto=format&fit=crop');">
+            </div>
+        </div>
+
+        <!-- Dark gradient overlay for text legibility -->
+        <div class="hero-overlay"></div>
+
+        <!-- Slide progress indicators -->
+        <div class="carousel-dots" id="carousel-dots"></div>
+
+        <!-- Overlay Content -->
+        <div class="hero-inner">
+            <div class="hero-eyebrow">
+                <span class="hero-dot"></span>
+                <span>Awka's Premier Beauty Oasis</span>
+            </div>
+            <h1 class="hero-headline" id="hero-headline">
+                <span class="hero-line-1">Premium</span>
+                <span class="hero-line-2">Bath <em>&</em> Body</span>
+                <span class="hero-line-3">Delivered.</span>
+            </h1>
+            <p class="hero-sub" id="hero-sub">Mists &middot; Moisturizers &middot; Scrubs &middot; Hair Care &middot;
+                Intimate Care. 100% authentic brands, shipped right to your door in Awka &amp; nationwide.</p>
+
+            <div class="hero-cta-row">
+                <a href="shop.html" class="cta-primary" id="hero-primary-cta">
+                    Shop Collection
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path d="m9 18 6-6-6-6" />
+                    </svg>
+                </a>
+                <a href="#about" class="cta-ghost">Visit Outlet</a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat"><strong>500+</strong><span>Products</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat"><strong>2,000+</strong><span>Orders</span></div>
+                <div class="stat-divider"></div>
+                <div class="stat"><strong>4.9&#9733;</strong><span>Rating</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products Teaser Section -->
+    <section class="featured-section" id="shop">
+        <div class="container">
+            <div class="section-label">
+                <span class="label-line"></span>
+                <span class="label-text">The Collection</span>
+            </div>
+            <div class="featured-section-header">
+                <div>
+                    <h2 class="shop-title">Best<em>sellers</em></h2>
+                    <p style="color:var(--text-muted);font-size:15px;margin-top:6px;">A curated selection of our most-loved products.</p>
+                </div>
+                <a href="shop.html" class="btn btn-primary" id="view-all-btn" style="display:inline-flex;align-items:center;gap:8px;white-space:nowrap;">
+                    View All Products
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+            </div>
+
+            <!-- Category Pills -->
+            <div class="category-scroll" id="featured-categories" style="margin-bottom:24px;">
+                <button class="category-btn active" data-cat="all">All</button>
+                <button class="category-btn" data-cat="perfumes">Perfumes &amp; Mists</button>
+                <button class="category-btn" data-cat="body-lotions">Body Lotions</button>
+                <button class="category-btn" data-cat="body-scrubs-oils">Scrubs &amp; Oils</button>
+                <button class="category-btn" data-cat="hair-products">Hair Products</button>
+                <button class="category-btn" data-cat="intimate-care">Intimate Care</button>
+            </div>
+
+            <!-- Featured Product Cards -->
+            <div class="product-grid" id="featured-grid">
+                <!-- Populated by store.js -->
+            </div>
+
+            <!-- Bottom CTA -->
+            <div style="text-align:center;margin-top:48px;">
+                <p style="color:var(--text-muted);margin-bottom:16px;font-size:15px;">Explore 500+ products across all categories</p>
+                <a href="shop.html" class="cta-primary" style="display:inline-flex;">
+                    Browse Full Catalog
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-left:8px;"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive Scent Finder Quiz Section -->
+    <section class="scent-quiz-section" id="scent-finder">
+        <div class="container">
+            <div class="quiz-card-wrapper">
+                <!-- Step 0: Intro State -->
+                <div class="quiz-intro" id="quiz-intro">
+                    <div class="section-label">
+                        <span class="label-line"></span>
+                        <span class="label-text">Interactive Finder</span>
+                    </div>
+                    <h2 class="quiz-title">Find Your <em>Signature Scent</em></h2>
+                    <p class="quiz-desc">Take our 30-second quiz to discover the perfect Bath & Body Works scent,
+                        lotion, or mist tailored to your unique vibe.</p>
+                    <button class="btn btn-primary" id="start-quiz-btn">Start Scent Finder</button>
+                </div>
+
+                <!-- Step 1-3: Question State -->
+                <div class="quiz-question-container" id="quiz-question-container" style="display: none;">
+                    <div class="quiz-progress-bar">
+                        <div class="quiz-progress-fill" id="quiz-progress-fill"></div>
+                    </div>
+                    <div class="quiz-step-count" id="quiz-step-count">Question 1 of 3</div>
+                    <h3 class="quiz-question" id="quiz-question-text">What is your ideal scent vibe?</h3>
+                    <div class="quiz-options" id="quiz-options-grid">
+                        <!-- Options loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Step 4: Results State -->
+                <div class="quiz-results" id="quiz-results" style="display: none;">
+                    <div class="success-icon-circle">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 6 9 17l-5-5" />
+                        </svg>
+                    </div>
+                    <h3 class="quiz-results-title">Your Scent Match Found!</h3>
+                    <p class="quiz-results-desc">Based on your answers, we think you'll absolutely love this scent
+                        profile:</p>
+
+                    <!-- Spotlighted Match Card -->
+                    <div class="quiz-recommended-product" id="quiz-recommendation-card">
+                        <!-- Dynamic Match Product Card -->
+                    </div>
+
+                    <div class="quiz-actions">
+                        <button class="btn btn-secondary" id="restart-quiz-btn">Start Over</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ─── Customer Reviews Section ────────────────────────────── -->
+    <section class="reviews-section-full" id="reviews">
+        <div class="container">
+            <!-- Header -->
+            <div class="section-label">
+                <span class="label-line"></span>
+                <span class="label-text">Customer Reviews</span>
+            </div>
+            <div class="featured-section-header" style="margin-bottom:36px;">
+                <div>
+                    <h2 class="shop-title">What Our <em>Customers</em> Say</h2>
+                    <p style="color:var(--text-muted);font-size:15px;margin-top:6px;">Real reviews from real shoppers in Awka and beyond.</p>
+                </div>
+                <div id="reviews-avg-badge" style="text-align:center; padding:16px 28px; background:var(--paper); border:1px solid var(--border); border-radius:var(--r-lg); display:flex; align-items:center; gap:12px;">
+                    <div style="font-family:var(--fh); font-size:40px; font-weight:800; color:var(--red); line-height:1;" id="reviews-avg-number">4.9</div>
+                    <div>
+                        <div style="color:#f59e0b; font-size:18px;" id="reviews-avg-stars">★★★★★</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="reviews-count-label">from our customers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Grid -->
+            <div class="reviews-grid" id="homepage-reviews-grid">
+                <!-- Skeleton loader -->
+                <div class="review-card" style="opacity:.4; animation: pulse 1.5s infinite;">
+                    <div class="review-card-header"><div class="reviewer-avatar">?</div><div class="reviewer-info"><div style="height:14px;background:var(--border);border-radius:4px;width:120px;margin-bottom:6px;"></div><div style="height:11px;background:var(--border);border-radius:4px;width:80px;"></div></div></div>
+                    <div style="height:12px;background:var(--border);border-radius:4px;width:90px;"></div>
+                    <div style="height:11px;background:var(--border);border-radius:4px;"></div>
+                    <div style="height:11px;background:var(--border);border-radius:4px;width:70%;"></div>
+                </div>
+            </div>
+
+            <!-- Submit a Review Form -->
+            <div class="review-form-card">
+                <h3>Share Your Experience ✍️</h3>
+                <p>Had a great experience? Let others know! Your review helps shoppers make confident choices.</p>
+
+                <form id="homepage-review-form">
+                    <div class="form-row" style="gap:16px; display:grid; grid-template-columns:1fr 1fr; margin-bottom:16px;">
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" for="rev-name">Your Name *</label>
+                            <input type="text" class="form-input" id="rev-name" placeholder="e.g. Amara O." required>
+                        </div>
+                        <div class="form-group" style="margin-bottom:0;">
+                            <label class="form-label" for="rev-product">Product Reviewed *</label>
+                            <input type="text" class="form-input" id="rev-product" placeholder="e.g. Bare Vanilla Mist" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:16px;">
+                        <label class="form-label">Your Rating *</label>
+                        <div class="star-picker" id="star-picker" role="group" aria-label="Star rating">
+                            <button type="button" data-val="1" aria-label="1 star">★</button>
+                            <button type="button" data-val="2" aria-label="2 stars">★</button>
+                            <button type="button" data-val="3" aria-label="3 stars">★</button>
+                            <button type="button" data-val="4" aria-label="4 stars">★</button>
+                            <button type="button" data-val="5" aria-label="5 stars">★</button>
+                        </div>
+                        <input type="hidden" id="rev-rating" value="0">
+                    </div>
+
+                    <div class="form-group" style="margin-bottom:20px;">
+                        <label class="form-label" for="rev-comment">Your Review *</label>
+                        <textarea class="form-input" id="rev-comment" style="height:100px; resize:none;" placeholder="Tell us what you loved about the product, the scent, the packaging, the delivery…" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary checkout-submit-btn" id="submit-review-btn" style="width:100%;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                        Submit Review
+                    </button>
+                    <div class="review-success-msg" id="review-success-msg">
+                        🎉 Thank you! Your review has been submitted and is now live.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Why Us / Features -->
+    <section class="features-section" id="features">
+
+        <div class="container">
+            <div class="section-label">
+                <span class="label-line"></span>
+                <span class="label-text">Why 12 Degrees</span>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-num">01</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h4>100% Authentic</h4>
+                    <p>Sourced directly from official Bath & Body Works in the US and UK. Zero fakes, always guaranteed.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-num">02</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8">
+                            <rect x="1" y="3" width="15" height="13" rx="2" ry="2" />
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                            <circle cx="5.5" cy="18.5" r="2.5" />
+                            <circle cx="18.5" cy="18.5" r="2.5" />
+                        </svg>
+                    </div>
+                    <h4>Swift Delivery</h4>
+                    <p>Same-day delivery within Awka and standard nationwide shipping across Nigeria.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-num">03</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <h4>WhatsApp Ordering</h4>
+                    <p>Quick, seamless checkout. Confirm your order directly with our agent in seconds.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-num">04</div>
+                    <div class="feature-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="1.8">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                    </div>
+                    <h4>Expert Picks</h4>
+                    <p>Our curated collection is hand-selected by beauty experts for the best scents and results.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Find Us Section -->
+    <section class="find-us-section" id="about">
+        <div class="container">
+            <div class="find-us-grid">
+                <div class="find-us-info">
+                    <div class="section-label">
+                        <span class="label-line"></span>
+                        <span class="label-text">Visit Our Outlet</span>
+                    </div>
+                    <h2 class="find-us-title">Located in the<br>Heart of <em>Awka</em></h2>
+                    <p class="find-us-desc">Smell before you buy. Drop by our store at Ifite Awka for a hands-on
+                        experience with every product we carry.</p>
+
+                    <div class="contact-items">
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>Store Address</strong>
+                                <p>Shop B7 & B8, Unizik Dongreg Plaza, Dynamo Junction, Ifite Awka, Anambra State.</p>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <div class="contact-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <strong>WhatsApp / Call</strong>
+                                <p>09029819153 — Same-day replies guaranteed.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="https://wa.me/2349029819153" target="_blank" class="cta-primary"
+                        style="display:inline-flex; margin-top: 8px;">
+                        Chat on WhatsApp
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5">
+                            <path d="m9 18 6-6-6-6" />
+                        </svg>
+                    </a>
+                </div>
+
+                <div class="find-us-map">
+                    <iframe width="100%" height="100%" frameborder="0" scrolling="no"
+                        src="https://maps.google.com/maps?q=Dongreg%20Plaza%20Ifite%20Awka&t=&z=16&ie=UTF8&iwloc=&output=embed"
+                        title="12 Degrees Store Location Map" allowfullscreen>
+                    </iframe>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Drawer -->
+    <div class="drawer-overlay" id="cart-drawer-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3>Cart <span id="cart-qty-count">0</span> items</h3>
+            <button class="close-btn" id="close-cart-btn" aria-label="Close Cart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items-container"></div>
+        <div class="cart-footer">
+            <div class="cart-summary-row">
+                <span class="cart-total-label">Subtotal</span>
+                <span class="cart-total-val" id="cart-total-price">₦ 0</span>
+            </div>
+            <button class="btn btn-primary" id="checkout-btn" style="width: 100%; height: 50px;" disabled>Proceed to
+                Checkout</button>
+        </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div class="modal-overlay" id="quickview-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-quickview-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="quickview-body" id="quickview-body-content"></div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-content" style="max-width: 520px;">
+            <button class="modal-close" id="close-checkout-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="checkout-body">
+                <h3 class="checkout-title">Complete Your Order</h3>
+                <p class="checkout-desc">Enter details below — your order goes straight to our WhatsApp agent.</p>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label class="form-label" for="cust-name">Full Name *</label>
+                        <input type="text" class="form-input" id="cust-name" placeholder="Your first and last name"
+                            required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="cust-phone">WhatsApp Number *</label>
+                            <input type="tel" class="form-input" id="cust-phone" placeholder="e.g. 08031234567"
+                                required>
+                        </div>
+                        <div class="form-group" id="cust-email-group">
+                            <label class="form-label" for="cust-email">Email Address *</label>
+                            <input type="email" class="form-input" id="cust-email"
+                                placeholder="e.g. customer@example.com" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="cust-address">Delivery Address *</label>
+                        <input type="text" class="form-input" id="cust-address" placeholder="Street name, area, city"
+                            required>
+                    </div>
+                    <div class="order-summary-box">
+                        <div class="order-summary-row">
+                            <span>Total Items</span>
+                            <span id="checkout-items-qty">0</span>
+                        </div>
+                        <div class="order-summary-row total-row">
+                            <span>Order Total</span>
+                            <span id="checkout-total-val" style="color: var(--primary);">₦ 0</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary checkout-submit-btn" id="submit-order-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Pay Securely with Paystack
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Success Modal -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <button class="modal-close" id="close-success-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="success-body">
+                <div class="success-icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                </div>
+                <h3 class="success-title">Order Received!</h3>
+                <p class="success-desc">Your order has been logged. A WhatsApp tab should have opened to send your order details.</p>
+                <a href="index.html" class="btn btn-primary" id="success-wa-redirect-btn">Finish ☺️</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-brand">
+                    <img src="images/logo.png" alt="12 Degrees" class="logo-img footer-logo">
+                    <p>Awka's #1 source for genuine Bath & Body Works products. Premium scents, skincare & more,
+                        delivered fast.</p>
+                    <div class="social-links">
+                        <a href="https://instagram.com/the12degreestores" target="_blank" class="social-icon"
+                            aria-label="Instagram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                            </svg>
+                        </a>
+                        <a href="https://facebook.com/the12degreestores" target="_blank" class="social-icon"
+                            aria-label="Facebook">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                            </svg>
+                        </a>
+                        <a href="https://tiktok.com/@the12degreestores" target="_blank" class="social-icon"
+                            aria-label="TikTok">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Navigate</h4>
+                    <ul>
+                        <li><a href="#home">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="#features">Why Us</a></li>
+                        <li><a href="#about">Our Outlet</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="shop.html?cat=perfumes">Perfumes &amp; Mists</a></li>
+                        <li><a href="shop.html?cat=body-lotions">Body Lotions</a></li>
+                        <li><a href="shop.html?cat=body-scrubs-oils">Scrubs &amp; Oils</a></li>
+                        <li><a href="shop.html?cat=intimate-care">Intimate Care</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="tel:09029819153">09029819153</a></li>
+                        <li><a href="https://wa.me/2349029819153" target="_blank">WhatsApp Us</a></li>
+                        <li style="color:#555; font-size:13px; line-height:1.6;">Shop B7 & B8, Unizik Dongreg Plaza,
+                            Ifite Awka.</li>
+                    </ul>
+                    <a href="admin.html" class="admin-link">Admin Panel →</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container footer-bottom-inner">
+                <p>© 2026 12 Degrees. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/store.js"></script>
+
+    <!-- Native scripts that run even if modules are blocked by browser CORS policy on file:// protocol -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // ─── Header Scroll Behavior ───
+            const siteHeader = document.getElementById('site-header');
+            if (siteHeader) {
+                const handleScroll = () => {
+                    if (window.scrollY > 20) {
+                        siteHeader.classList.add('scrolled');
+                    } else {
+                        siteHeader.classList.remove('scrolled');
+                    }
+                };
+                window.addEventListener('scroll', handleScroll, { passive: true });
+                handleScroll(); // Initial check
+            }
+
+            // ─── Background Carousel Auto-Slide ───
+            const carousel = document.getElementById('hero-carousel');
+            const dotsContainer = document.getElementById('carousel-dots');
+            if (carousel && dotsContainer) {
+                const slides = carousel.querySelectorAll('.carousel-slide');
+                if (slides.length > 0) {
+                    let current = 0;
+                    let timer = null;
+
+                    // Clear any existing dots
+                    dotsContainer.innerHTML = '';
+
+                    // Build dot indicators
+                    slides.forEach((_, i) => {
+                        const dot = document.createElement('button');
+                        dot.className = 'carousel-dot' + (i === 0 ? ' active' : '');
+                        dot.setAttribute('aria-label', `Slide ${i + 1}`);
+                        dot.addEventListener('click', () => goTo(i));
+                        dotsContainer.appendChild(dot);
+                    });
+
+                    function getDots() { return dotsContainer.querySelectorAll('.carousel-dot'); }
+
+                    function goTo(index) {
+                        slides[current].classList.add('leaving');
+                        slides[current].classList.remove('active');
+                        getDots()[current].classList.remove('active');
+
+                        const prev = slides[current];
+                        setTimeout(() => prev.classList.remove('leaving'), 1500);
+
+                        current = (index + slides.length) % slides.length;
+                        slides[current].classList.add('active');
+                        getDots()[current].classList.add('active');
+                    }
+
+                    function advance() { goTo(current + 1); }
+
+                    function startTimer() {
+                        clearInterval(timer);
+                        timer = setInterval(advance, 5500);
+                    }
+
+                    startTimer();
+
+                    // Pause on hover
+                    carousel.addEventListener('mouseenter', () => clearInterval(timer));
+                    carousel.addEventListener('mouseleave', startTimer);
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Shop — 12 Degrees | Authentic Bath & Body Works & Skincare</title>
+    <meta name="description"
+        content="Browse and shop the complete catalog of authentic Bath and Body Works products, mists, lotions, scrubs, intimate care, and more in Awka.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Firebase SDK Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+                "firebase/analytics": "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js",
+                "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+                "firebase/storage": "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- Local file protocol warning banner -->
+    <div id="file-protocol-warning"
+        style="display: none; background: #e60012; color: white; padding: 12px 24px; text-align: center; font-size: 14px; font-weight: 600; position: fixed; top: 0; left: 0; right: 0; z-index: 100000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); font-family: sans-serif;">
+        ⚠️ Local file protocol (file://) detected. Browsers block database features when opened directly. Please use:
+        <a href="http://localhost:8080/shop.html"
+            style="color: white; text-decoration: underline; margin-left: 8px;">http://localhost:8080/shop.html</a>
+    </div>
+    <script>
+        if (window.location.protocol === 'file:') {
+            document.getElementById('file-protocol-warning').style.display = 'block';
+        }
+    </script>
+
+    <!-- Announcement Ticker -->
+    <div class="ticker-bar">
+        <div class="ticker-track">
+            <span>Free delivery in Awka on orders above ₦15,000</span>
+            <span class="ticker-dot">◆</span>
+            <span>100% Authentic Bath & Body Works Products</span>
+            <span class="ticker-dot">◆</span>
+            <span>Same-day delivery available — WhatsApp 09029819153</span>
+            <span class="ticker-dot">◆</span>
+            <span>Free delivery in Awka on orders above ₦15,000</span>
+        </div>
+    </div>
+
+    <!-- Header / Navigation Bar -->
+    <header id="site-header">
+        <div class="container header-container">
+            <a href="index.html" class="logo">
+                <img src="images/logo.png" alt="12 Degrees Logo" class="logo-img">
+            </a>
+
+            <nav id="navbar-links">
+                <a href="index.html#home" class="nav-link">Home</a>
+                <a href="shop.html" class="nav-link active">Shop</a>
+                <a href="index.html#features" class="nav-link">Why Us</a>
+                <a href="index.html#about" class="nav-link">Find Us</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="theme-toggle" id="theme-toggle-btn" aria-label="Toggle Dark Mode">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" style="display:none;">
+                        <circle cx="12" cy="12" r="4" />
+                        <path
+                            d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+                    </svg>
+                </button>
+                <button class="cart-toggle" id="cart-toggle-btn" aria-label="Open Cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                        <path d="M3 6h18" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <span class="cart-count" id="cart-count-badge">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Shop Hero Banner -->
+    <section class="shop-hero">
+        <div class="container">
+            <h1 class="shop-hero-title">The <em>Storefront</em></h1>
+            <p class="shop-hero-subtitle">Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs.</p>
+        </div>
+    </section>
+
+    <!-- Main Shop Catalog Section -->
+    <section class="shop-section" id="shop" style="padding: 40px 0 80px;">
+        <div class="container">
+            <div class="shop-section-header">
+                <h2 class="shop-title">Browse <em>Products</em></h2>
+                <div class="controls-bar">
+                    <div class="search-wrapper">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8" />
+                            <path d="m21 21-4.3-4.3" />
+                        </svg>
+                        <input type="text" class="search-input" id="search-input" placeholder="Search products…">
+                    </div>
+                    <div class="sort-wrapper">
+                        <select id="sort-select" aria-label="Sort products">
+                            <option value="default">Sort: Default</option>
+                            <option value="price-low">Price: Low → High</option>
+                            <option value="price-high">Price: High → Low</option>
+                            <option value="rating">Top Rated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="category-scroll" id="categories-container">
+                <button class="category-btn active" data-category="all">All</button>
+                <button class="category-btn" data-category="perfumes">Perfumes & Mists</button>
+                <button class="category-btn" data-category="body-lotions">Body Lotions</button>
+                <button class="category-btn" data-category="body-scrubs-oils">Scrubs & Oils</button>
+                <button class="category-btn" data-category="hair-products">Hair Products</button>
+                <button class="category-btn" data-category="intimate-care">Intimate Care</button>
+            </div>
+
+            <!-- Products Grid -->
+            <div class="product-grid" id="product-grid">
+                <!-- Dynamically populated from JS -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Cart Drawer -->
+    <div class="drawer-overlay" id="cart-drawer-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-drawer-header">
+            <h3>Cart <span id="cart-qty-count">0</span> items</h3>
+            <button class="close-btn" id="close-cart-btn" aria-label="Close Cart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items-container"></div>
+        <div class="cart-footer">
+            <div class="cart-summary-row">
+                <span class="cart-total-label">Subtotal</span>
+                <span class="cart-total-val" id="cart-total-price">₦ 0</span>
+            </div>
+            <button class="btn btn-primary" id="checkout-btn" style="width: 100%; height: 50px;" disabled>Proceed to
+                Checkout</button>
+        </div>
+    </div>
+
+    <!-- Quick View Modal -->
+    <div class="modal-overlay" id="quickview-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-quickview-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="quickview-body" id="quickview-body-content"></div>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div class="modal-overlay" id="checkout-modal">
+        <div class="modal-content" style="max-width: 520px;">
+            <button class="modal-close" id="close-checkout-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="checkout-body">
+                <h3 class="checkout-title">Complete Your Order</h3>
+                <p class="checkout-desc">Enter details below — your order goes straight to our WhatsApp agent.</p>
+                <form id="checkout-form">
+                    <div class="form-group">
+                        <label class="form-label" for="cust-name">Full Name *</label>
+                        <input type="text" class="form-input" id="cust-name" placeholder="Your first and last name"
+                            required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label" for="cust-phone">WhatsApp Number *</label>
+                            <input type="tel" class="form-input" id="cust-phone" placeholder="e.g. 08031234567"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="cust-email">Email Address</label>
+                            <input type="email" class="form-input" id="cust-email" placeholder="Optional email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="cust-address">Delivery Address (within Awka) *</label>
+                        <textarea class="form-input" id="cust-address" style="height: 80px; resize: none;"
+                            placeholder="Specify street name, hostel, plaza, landmarks, etc." required></textarea>
+                    </div>
+                    <div class="checkout-footer-row"
+                        style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:20px; border-top:1px solid var(--border)">
+                        <div>
+                            <div style="font-size:12px; color:var(--text-muted)">Order Total</div>
+                            <div style="font-family:var(--fh); font-size:22px; font-weight:800; color:var(--red)"
+                                id="checkout-total-val">₦ 0</div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="submit-order-btn" style="padding:0 32px;">Pay With
+                            Card</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div class="modal-overlay" id="success-modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <button class="modal-close" id="close-success-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+            <div class="success-body">
+                <div class="success-icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 6 9 17l-5-5" />
+                    </svg>
+                </div>
+                <h3 class="success-title">Order Received!</h3>
+                <p class="success-desc">Your order has been logged. A WhatsApp tab should have opened to send your order details.</p>
+                <a href="index.html" class="btn btn-primary" id="success-wa-redirect-btn">Finish ☺️</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-top">
+            <div class="container">
+                <div class="footer-brand">
+                    <img src="images/logo.png" alt="12 Degrees" class="logo-img footer-logo">
+                    <p>Awka's #1 source for genuine Bath & Body Works products. Premium scents, skincare & more,
+                        delivered fast.</p>
+                    <div class="social-links">
+                        <a href="https://instagram.com/the12degreestores" target="_blank" class="social-icon"
+                            aria-label="Instagram">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                                <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                            </svg>
+                        </a>
+                        <a href="https://facebook.com/the12degreestores" target="_blank" class="social-icon"
+                            aria-label="Facebook">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                            </svg>
+                        </a>
+                        <a href="https://tiktok.com/@the12degreestores" target="_blank" class="social-icon"
+                            aria-label="TikTok">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Navigate</h4>
+                    <ul>
+                        <li><a href="index.html#home">Home</a></li>
+                        <li><a href="shop.html">Shop</a></li>
+                        <li><a href="index.html#features">Why Us</a></li>
+                        <li><a href="index.html#about">Our Outlet</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Categories</h4>
+                    <ul>
+                        <li><a href="shop.html" onclick="window.filterByCategory('perfumes')">Perfumes & Mists</a></li>
+                        <li><a href="shop.html" onclick="window.filterByCategory('body-lotions')">Body Lotions</a></li>
+                        <li><a href="shop.html" onclick="window.filterByCategory('body-scrubs-oils')">Scrubs & Oils</a></li>
+                        <li><a href="shop.html" onclick="window.filterByCategory('intimate-care')">Intimate Care</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-links-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><a href="tel:09029819153">09029819153</a></li>
+                        <li><a href="https://wa.me/2349029819153" target="_blank">WhatsApp Us</a></li>
+                        <li style="color:#555; font-size:13px; line-height:1.6;">Shop B7 & B8, Unizik Dongreg Plaza,
+                            Ifite Awka.</li>
+                    </ul>
+                    <a href="admin.html" class="admin-link">Admin Panel →</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container footer-bottom-inner">
+                <p>© 2026 12 Degrees. All rights reserved.</p>
+                <div class="footer-bottom-links">
+                    <a href="#">Privacy</a>
+                    <a href="#">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/store.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Header Scroll Behavior
+            const siteHeader = document.getElementById('site-header');
+            if (siteHeader) {
+                const handleScroll = () => {
+                    if (window.scrollY > 20) {
+                        siteHeader.classList.add('scrolled');
+                    } else {
+                        siteHeader.classList.remove('scrolled');
+                    }
+                };
+                window.addEventListener('scroll', handleScroll, { passive: true });
+                handleScroll();
+            }
+        });
+    </script>
+</body>
+
+</html>
