@@ -258,8 +258,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Check for Paystack redirect reference
-        const urlParams = new URLSearchParams(window.location.search);
-        const paystackRef = urlParams.get('reference');
+        const paystackParams = new URLSearchParams(window.location.search);
+        const paystackRef = paystackParams.get('reference');
         if (paystackRef) {
             handlePaystackCallback(paystackRef);
         }
@@ -362,8 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Featured Products (Homepage teaser — top-rated, filterable by category pill) ---
     function renderFeaturedProducts() {
         addDebug(`🌟 renderFeatured: ${products.length} products, featuredGrid: ${!!featuredGrid}`);
-        const featuredGrid = document.getElementById('featured-grid');
-        const featuredCategories = document.getElementById('featured-categories');
         if (!featuredGrid) {
             addDebug('❌ featuredGrid element NOT found!');
             return;
