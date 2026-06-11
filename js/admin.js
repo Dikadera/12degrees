@@ -244,6 +244,8 @@ document.addEventListener('DOMContentLoaded', () => {
         orders   = window.storeDb.getOrders();
         reviews  = window.storeDb.getReviews();
 
+        console.log(`✅ Dashboard initialized: ${products.length} products, ${orders.length} orders, ${reviews.length} reviews`);
+
         updateMetrics();
         renderProductsTable();
         renderOrdersTable();
@@ -591,7 +593,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        return Array.from(customerMap.values());
+        const result = Array.from(customerMap.values());
+        console.log(`📊 getCompiledCustomers: ${orders.length} orders → ${result.length} customers`, result);
+        return result;
     }
 
     function renderCustomersTable() {
