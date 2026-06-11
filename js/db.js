@@ -326,7 +326,7 @@ onAuthStateChanged(auth, (user) => {
         }
     }, error => {
         console.error("Orders subscription error: ", error);
-        cachedOrders = [];
+        cachedOrders = DEFAULT_ORDERS;
         ordersLoaded = true;
         checkReady();
     });

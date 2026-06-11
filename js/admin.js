@@ -563,12 +563,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // ── Customers Section Logic ──
     function getCompiledCustomers() {
         const customerMap = new Map();
-        
+
         orders.forEach(order => {
             const phone = (order.customerPhone || '').trim();
             if (!phone) return;
-            
-            if (!customerMap.has(phone)) {
+
+            const isNewCustomer = !customerMap.has(phone);
+            if (isNewCustomer) {
                 customerMap.set(phone, {
                     phone: phone,
                     name: order.customerName || 'N/A',
@@ -578,19 +579,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     orders: []
                 });
             }
-            
+
             const cust = customerMap.get(phone);
             cust.totalSpent += order.total || 0;
             cust.orders.push(order);
-            
-            // Set latest name, email, and address from the most recent order
-            if (cust.orders.length === 1) {
+
+            if (isNewCustomer) {
                 cust.name = order.customerName || 'N/A';
                 cust.email = order.customerEmail || 'N/A';
                 cust.address = order.address || 'N/A';
             }
         });
-        
+
         return Array.from(customerMap.values());
     }
 
