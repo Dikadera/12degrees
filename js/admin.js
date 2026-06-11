@@ -855,7 +855,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = new Date(); d.setDate(d.getDate() - i);
             labels.push(d.toLocaleDateString('en-US', {month:'short',day:'numeric'}));
             const ds = d.toDateString();
-            data.push(orders.filter(o => (o.status==='completed'||o.status==='processing') && new Date(o.date).toDateString()===ds).reduce((s,o)=>s+o.total,0));
+            data.push(orders.filter(o => new Date(o.date).toDateString()===ds).reduce((s,o)=>s+o.total,0));
         }
         return { labels, data };
     }
