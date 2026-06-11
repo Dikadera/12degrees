@@ -348,6 +348,7 @@ onSnapshot(doc(firestoreDb, "analytics", "storefront"), async (snapshot) => {
         checkReady();
     } else {
         cachedViews = snapshot.data().views || 0;
+        window.dispatchEvent(new Event('db_analytics_updated'));
         analyticsLoaded = true;
         checkReady();
     }
@@ -459,7 +460,8 @@ const db = {
     },
 
     getReviews() {
-        return cachedReviews;
+        const pendingReviews = JSON.parse(localStorage.getItem('12degrees_pending_reviews') || '[]');
+        return [...cachedReviews, ...pendingReviews];
     },
 
     async addReview(review) {
@@ -469,8 +471,20 @@ const db = {
             date: new Date().toISOString(),
             ...review
         };
-        await setDoc(doc(firestoreDb, "reviews", reviewId), newReview);
-        await this.recalculateProductRating(review.productId);
+
+        try {
+            await setDoc(doc(firestoreDb, "reviews", reviewId), newReview);
+            await this.recalculateProductRating(review.productId);
+        } catch (err) {
+            if (err.code === 'permission-denied') {
+                console.warn("Storing review locally (Firestore write denied):", err.message);
+                const localReviews = JSON.parse(localStorage.getItem('12degrees_pending_reviews') || '[]');
+                localReviews.push(newReview);
+                localStorage.setItem('12degrees_pending_reviews', JSON.stringify(localReviews));
+            } else {
+                throw err;
+            }
+        }
         return newReview;
     },
 

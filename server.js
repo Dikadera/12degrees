@@ -20,6 +20,7 @@ if (!PAYSTACK_SECRET_KEY || PAYSTACK_SECRET_KEY === 'PASTE_YOUR_SECRET_KEY_HERE'
     console.warn('   https://dashboard.paystack.com/#/settings/developers\n');
 } else {
     console.log(`✅ Paystack key loaded: ${PAYSTACK_SECRET_KEY.slice(0, 18)}...${PAYSTACK_SECRET_KEY.slice(-6)}`);
+    console.log(`   Full key: ${PAYSTACK_SECRET_KEY}`);
 }
 
 const MIME_TYPES = {
@@ -140,11 +141,13 @@ function initPaystackTransaction(email, amount, metadata, host) {
             }
         };
 
+        console.log(`   Using Authorization: Bearer ${PAYSTACK_SECRET_KEY ? '(key present)' : '(NO KEY)'}`);
+
         const request = https.request(options, (response) => {
             let data = '';
             response.on('data', chunk => { data += chunk; });
             response.on('end', () => {
-                console.log(`   Paystack HTTP ${response.statusCode}: ${data.slice(0, 200)}`);
+                console.log(`   Paystack HTTP ${response.statusCode}: ${data}`);
                 try {
                     const parsed = JSON.parse(data);
                     if (parsed.status) {
@@ -153,7 +156,7 @@ function initPaystackTransaction(email, amount, metadata, host) {
                         reject(new Error(parsed.message || 'Paystack initialization failed'));
                     }
                 } catch (e) {
-                    reject(new Error('Failed to parse Paystack response: ' + data.slice(0, 100)));
+                    reject(new Error('Failed to parse Paystack response: ' + data));
                 }
             });
         });

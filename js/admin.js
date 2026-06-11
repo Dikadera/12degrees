@@ -271,6 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCharts();
         });
 
+        window.addEventListener('db_analytics_updated', () => {
+            updateMetrics();
+        });
+
         window.addEventListener('db_reviews_updated', () => {
             reviews = window.storeDb.getReviews();
             renderReviewsTable();
@@ -281,10 +285,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // KPI METRICS
     // ══════════════════════════════════════════════════════════════════════════
     function updateMetrics() {
-        const sales    = orders.filter(o => o.status === 'completed' || o.status === 'processing');
-        const totalRev = sales.reduce((s, o) => s + o.total, 0);
+        const totalRev = orders.reduce((s, o) => s + o.total, 0);
         const count    = orders.length;
-        const avg      = sales.length > 0 ? Math.round(totalRev / sales.length) : 0;
+        const avg      = count > 0 ? Math.round(totalRev / count) : 0;
         const views    = window.storeDb.getViews();
 
         if (metricRevenue)  metricRevenue.textContent  = `₦ ${formatMoney(totalRev)}`;
