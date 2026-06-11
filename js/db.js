@@ -313,7 +313,7 @@ onAuthStateChanged(auth, (user) => {
                     console.error("Auto-seeding orders failed:", err);
                 }
             }
-            cachedOrders = [];
+            cachedOrders = DEFAULT_ORDERS;
             ordersLoaded = true;
             checkReady();
         } else {
