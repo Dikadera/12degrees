@@ -1,5 +1,33 @@
 // 12 Degrees Storefront JS Logic
 document.addEventListener('DOMContentLoaded', () => {
+    // Debug panel to show what's happening
+    const debugPanel = document.createElement('div');
+    debugPanel.id = 'debug-panel';
+    debugPanel.style.cssText = `
+        position: fixed;
+        bottom: 10px;
+        right: 10px;
+        background: #1a1a1a;
+        color: #0f0;
+        padding: 12px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-family: monospace;
+        z-index: 99999;
+        max-width: 300px;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #0f0;
+    `;
+    document.body.appendChild(debugPanel);
+
+    const addDebug = (msg) => {
+        debugPanel.innerHTML += msg + '<br>';
+        debugPanel.scrollTop = debugPanel.scrollHeight;
+    };
+
+    addDebug('🔄 Store.js loaded');
+
     // Select elements
     const productGrid = document.getElementById('product-grid');
     const featuredGrid = document.getElementById('featured-grid');
@@ -50,21 +78,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Store
     async function initStore() {
+        addDebug('📦 initStore() starting...');
         try {
             if (window.storeDb) {
+                addDebug('✅ storeDb found, waiting for ready...');
                 await window.storeDb.ready;
                 products = window.storeDb.getProducts();
+                addDebug(`📊 Got ${products.length} products from DB`);
             } else {
-                console.warn("storeDb is not defined. Using local fallback products.");
+                addDebug('❌ storeDb NOT defined!');
                 products = [];
             }
         } catch (err) {
-            console.error("Error connecting to database:", err);
+            addDebug(`❌ DB Error: ${err.message}`);
             products = [];
         }
 
         // If products are empty, populate with local default products so storefront is never blank
         if (!products || products.length === 0) {
+            addDebug('⚠️ Loading default products...');
             products = [
                 {
                     id: 'p1',
@@ -157,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
         }
 
+        addDebug(`✅ ${products.length} products ready for render`);
+
         try {
             if (window.storeDb && typeof window.storeDb.incrementViews === 'function') {
                 window.storeDb.incrementViews(); // Log a page view
@@ -189,6 +223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        addDebug('🎨 Calling renderProducts & renderFeatured...');
         renderProducts();
         renderFeaturedProducts();
         updateCartUI();
@@ -326,9 +361,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Featured Products (Homepage teaser — top-rated, filterable by category pill) ---
     function renderFeaturedProducts() {
+        addDebug(`🌟 renderFeatured: ${products.length} products, featuredGrid: ${!!featuredGrid}`);
         const featuredGrid = document.getElementById('featured-grid');
         const featuredCategories = document.getElementById('featured-categories');
-        if (!featuredGrid) return;
+        if (!featuredGrid) {
+            addDebug('❌ featuredGrid element NOT found!');
+            return;
+        }
 
         // Determine which category pill is active
         let activeCat = 'all';
@@ -411,6 +450,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             featuredGrid.appendChild(card);
         });
+
+        addDebug(`✅ Rendered ${featured.length} featured products`);
 
         // Wire up featured category pills (once only)
         if (featuredCategories && !featuredCategories._wired) {
