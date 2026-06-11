@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             featuredGrid.appendChild(card);
         });
 
-        addDebug(`✅ Rendered ${featured.length} featured products`);
+        addDebug(`✅ Rendered ${featured.length} featured products (grid has ${featuredGrid.children.length} children)`);
 
         // Wire up featured category pills (once only)
         if (featuredCategories && !featuredCategories._wired) {
