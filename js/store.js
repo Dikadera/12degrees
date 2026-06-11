@@ -50,21 +50,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Store
     async function initStore() {
+        console.log("🔄 initStore() starting...");
         try {
             if (window.storeDb) {
+                console.log("✅ window.storeDb exists, waiting for ready...");
                 await window.storeDb.ready;
                 products = window.storeDb.getProducts();
+                console.log("📦 Products from DB:", products.length, products);
             } else {
-                console.warn("storeDb is not defined. Using local fallback products.");
+                console.warn("❌ storeDb is not defined. Using local fallback products.");
                 products = [];
             }
         } catch (err) {
-            console.error("Error connecting to database:", err);
+            console.error("❌ Error connecting to database:", err);
             products = [];
         }
 
         // If products are empty, populate with local default products so storefront is never blank
         if (!products || products.length === 0) {
+            console.log("⚠️ Products empty, loading defaults...");
             products = [
                 {
                     id: 'p1',
@@ -157,6 +161,10 @@ document.addEventListener('DOMContentLoaded', () => {
             ];
         }
 
+        console.log("✅ initStore loaded products:", products.length, "items");
+        console.log("📍 productGrid element:", productGrid);
+        console.log("📍 featuredGrid element:", featuredGrid);
+
         try {
             if (window.storeDb && typeof window.storeDb.incrementViews === 'function') {
                 window.storeDb.incrementViews(); // Log a page view
@@ -189,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        console.log("🎨 Rendering products...");
         renderProducts();
         renderFeaturedProducts();
         updateCartUI();
@@ -232,7 +241,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Render Products ---
     function renderProducts() {
-        if (!productGrid) return;
+        console.log("🖼️ renderProducts() called. productGrid:", productGrid, "products:", products.length);
+        if (!productGrid) {
+            console.warn("⚠️ productGrid not found, skipping renderProducts");
+            return;
+        }
         productGrid.innerHTML = '';
 
         // Filter products
@@ -326,9 +339,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Featured Products (Homepage teaser — top-rated, filterable by category pill) ---
     function renderFeaturedProducts() {
+        console.log("⭐ renderFeaturedProducts() called. featuredGrid:", featuredGrid, "products:", products.length);
         const featuredGrid = document.getElementById('featured-grid');
         const featuredCategories = document.getElementById('featured-categories');
-        if (!featuredGrid) return;
+        if (!featuredGrid) {
+            console.warn("⚠️ featuredGrid not found");
+            return;
+        }
 
         // Determine which category pill is active
         let activeCat = 'all';
