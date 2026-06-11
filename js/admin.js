@@ -284,13 +284,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const sales    = orders.filter(o => o.status === 'completed' || o.status === 'processing');
         const totalRev = sales.reduce((s, o) => s + o.total, 0);
         const count    = orders.length;
-        const avg      = count > 0 ? Math.round(totalRev / count) : 0;
+        const avg      = sales.length > 0 ? Math.round(totalRev / sales.length) : 0;
         const views    = window.storeDb.getViews();
 
         if (metricRevenue)  metricRevenue.textContent  = `₦ ${formatMoney(totalRev)}`;
         if (metricOrders)   metricOrders.textContent   = count;
         if (metricAvgOrder) metricAvgOrder.textContent = `₦ ${formatMoney(avg)}`;
         if (metricViews)    metricViews.textContent    = views;
+
+        console.log(`📊 Metrics: Revenue ₦${totalRev}, Orders ${count}, Avg ₦${avg}, Views ${views}`);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -316,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = productSearchQuery.toLowerCase();
         const list = products.filter(p =>
-            p.name.toLowerCase().includes(q) ||
+            (p.name || '').toLowerCase().includes(q) ||
             (p.description || '').toLowerCase().includes(q)
         );
 
@@ -477,9 +479,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = orderSearchQuery.toLowerCase();
         const list = orders.filter(o => {
             const okStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
-            const okSearch = o.customerName.toLowerCase().includes(q) ||
-                             o.id.toLowerCase().includes(q) ||
-                             o.customerPhone.includes(q);
+            const okSearch = (o.customerName || '').toLowerCase().includes(q) ||
+                             (o.id || '').toLowerCase().includes(q) ||
+                             (o.customerPhone || '').includes(q);
             return okStatus && okSearch;
         });
 
@@ -605,10 +607,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const compiled = getCompiledCustomers();
         const filtered = compiled.filter(c => {
             const query = customerSearchQuery.toLowerCase();
-            return c.name.toLowerCase().includes(query) ||
-                   c.phone.toLowerCase().includes(query) ||
-                   c.email.toLowerCase().includes(query) ||
-                   c.address.toLowerCase().includes(query);
+            return (c.name || '').toLowerCase().includes(query) ||
+                   (c.phone || '').toLowerCase().includes(query) ||
+                   (c.email || '').toLowerCase().includes(query) ||
+                   (c.address || '').toLowerCase().includes(query);
         });
         
         if (filtered.length === 0) {
@@ -701,9 +703,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const filtered = reviews.filter(r => {
             const query = reviewSearchQuery.toLowerCase();
-            return r.userName.toLowerCase().includes(query) ||
-                   r.productName.toLowerCase().includes(query) ||
-                   r.comment.toLowerCase().includes(query);
+            return (r.userName || '').toLowerCase().includes(query) ||
+                   (r.productName || '').toLowerCase().includes(query) ||
+                   (r.comment || '').toLowerCase().includes(query);
         });
         
         if (filtered.length === 0) {
@@ -856,36 +858,79 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initCharts() {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js library not loaded');
+            return;
+        }
+
+        // Destroy existing chart instances if they exist
+        try { salesChartInstance?.destroy(); } catch(e) {}
+        try { categoryChartInstance?.destroy(); } catch(e) {}
+
+        const salesCanvas = document.getElementById('salesTrendChart');
+        const categoriesCanvas = document.getElementById('categoriesSplitChart');
+
+        if (!salesCanvas || !categoriesCanvas) {
+            console.error('Chart canvas elements not found');
+            return;
+        }
+
         const { labels, data } = buildSalesData();
         const useMock = data.every(v => v === 0);
         const finalData = useMock ? [20000,45000,15000,60500,35000,13500,48000] : data;
 
-        salesChartInstance = new Chart(document.getElementById('salesTrendChart').getContext('2d'), {
-            type: 'line',
-            data: { labels, datasets: [{ label:'Daily Sales (₦)', data:finalData, borderColor:'#e60012', backgroundColor:'rgba(230,0,18,0.05)', borderWidth:3, fill:true, tension:0.4 }] },
-            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
-                scales: { y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{callback:v=>'₦'+formatMoney(v)}}, x:{grid:{display:false}} } }
-        });
+        try {
+            salesChartInstance = new Chart(salesCanvas.getContext('2d'), {
+                type: 'line',
+                data: { labels, datasets: [{ label:'Daily Sales (₦)', data:finalData, borderColor:'#e60012', backgroundColor:'rgba(230,0,18,0.05)', borderWidth:3, fill:true, tension:0.4 }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+                    scales: { y:{beginAtZero:true,grid:{color:'#f1f5f9'},ticks:{callback:v=>'₦'+formatMoney(v)}}, x:{grid:{display:false}} } }
+            });
+            console.log('✅ Sales trend chart initialized');
+        } catch (e) {
+            console.error('Failed to initialize sales chart:', e);
+        }
 
         const catKeys = ['perfumes','body-lotions','body-scrubs-oils','hair-products','intimate-care'];
-        categoryChartInstance = new Chart(document.getElementById('categoriesSplitChart').getContext('2d'), {
-            type: 'doughnut',
-            data: { labels:['Perfumes','Body Lotions','Scrubs & Oils','Hair Products','Intimate Care'],
-                    datasets:[{ data:catKeys.map(k=>products.filter(p=>p.category===k).length),
-                                backgroundColor:['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6'],
-                                borderWidth:2, borderColor:'#fff' }] },
-            options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}, cutout:'65%' }
-        });
+        const categoryData = catKeys.map(k=>products.filter(p=>p.category===k).length);
+
+        try {
+            categoryChartInstance = new Chart(categoriesCanvas.getContext('2d'), {
+                type: 'doughnut',
+                data: { labels:['Perfumes','Body Lotions','Scrubs & Oils','Hair Products','Intimate Care'],
+                        datasets:[{ data:categoryData,
+                                    backgroundColor:['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6'],
+                                    borderWidth:2, borderColor:'#fff' }] },
+                options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}, cutout:'65%' }
+            });
+            console.log('✅ Categories chart initialized');
+        } catch (e) {
+            console.error('Failed to initialize categories chart:', e);
+        }
     }
 
     function updateCharts() {
-        if (!salesChartInstance || !categoryChartInstance) return;
-        const { data } = buildSalesData();
-        const useMock = data.every(v=>v===0);
-        salesChartInstance.data.datasets[0].data = useMock ? [20000,45000,15000,60500,35000,13500,48000] : data;
-        salesChartInstance.update();
-        const catKeys = ['perfumes','body-lotions','body-scrubs-oils','hair-products','intimate-care'];
-        categoryChartInstance.data.datasets[0].data = catKeys.map(k=>products.filter(p=>p.category===k).length);
-        categoryChartInstance.update();
+        if (!salesChartInstance || !categoryChartInstance) {
+            console.warn('Charts not initialized, skipping update');
+            return;
+        }
+        try {
+            const { data } = buildSalesData();
+            const useMock = data.every(v=>v===0);
+            salesChartInstance.data.datasets[0].data = useMock ? [20000,45000,15000,60500,35000,13500,48000] : data;
+            salesChartInstance.update();
+            console.log('✅ Sales chart updated');
+        } catch (e) {
+            console.error('Failed to update sales chart:', e);
+        }
+
+        try {
+            const catKeys = ['perfumes','body-lotions','body-scrubs-oils','hair-products','intimate-care'];
+            categoryChartInstance.data.datasets[0].data = catKeys.map(k=>products.filter(p=>p.category===k).length);
+            categoryChartInstance.update();
+            console.log('✅ Categories chart updated');
+        } catch (e) {
+            console.error('Failed to update categories chart:', e);
+        }
     }
 });
