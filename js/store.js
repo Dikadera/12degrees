@@ -51,9 +51,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // WhatsApp Contact
     const WHATSAPP_PHONE = '2349029819153';
 
+    // EmailJS Credentials loaded dynamically
+    let emailjsPublicKey = '';
+    let emailjsServiceId = '';
+    let emailjsTemplateId = '';
+
+    async function fetchConfig() {
+        try {
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
+            const configRes = await fetch(`${apiBase}/api/config`);
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                emailjsPublicKey = configData.emailjsPublicKey;
+                emailjsServiceId = configData.emailjsServiceId;
+                emailjsTemplateId = configData.emailjsTemplateId;
+                console.log('🔑 EmailJS credentials loaded from backend config');
+                
+                if (typeof emailjs !== 'undefined' && emailjsPublicKey) {
+                    emailjs.init(emailjsPublicKey);
+                    console.log('✉️ EmailJS SDK initialized');
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load credentials from server:', e);
+        }
+    }
+
     // Initialize Store
     async function initStore() {
         console.log('📦 initStore() starting...');
+        
+        // Fetch configurations in background (non-blocking)
+        fetchConfig();
+
         try {
             if (window.storeDb) {
                 console.log('✅ storeDb found, waiting for ready...');
@@ -842,8 +872,8 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPrice += item.price * item.quantity;
         });
 
-        checkoutItemsQty.innerText = totalItems;
-        checkoutTotalVal.innerText = `₦ ${formatMoney(totalPrice)}`;
+        if (checkoutItemsQty) checkoutItemsQty.innerText = totalItems;
+        if (checkoutTotalVal) checkoutTotalVal.innerText = `₦ ${formatMoney(totalPrice)}`;
         checkoutModal.classList.add('open');
     }
 
@@ -881,7 +911,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Request transaction initialization from our secure backend API
-            const response = await fetch('/api/verify-payment', {
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
+            const response = await fetch(`${apiBase}/api/verify-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1379,6 +1410,80 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+
+    function triggerConfetti() {
+        const canvas = document.createElement('canvas');
+        canvas.style.position = 'fixed';
+        canvas.style.top = '0';
+        canvas.style.left = '0';
+        canvas.style.width = '100vw';
+        canvas.style.height = '100vh';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '999999';
+        document.body.appendChild(canvas);
+
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        const colors = ['#e60012', '#ffc107', '#28a745', '#007bff', '#e83e8c', '#fd7e14'];
+        const particles = [];
+
+        for (let i = 0; i < 120; i++) {
+            particles.push({
+                x: width / 2,
+                y: height / 2 - 80,
+                angle: Math.random() * Math.PI * 2,
+                velocity: 3 + Math.random() * 8,
+                friction: 0.95,
+                gravity: 0.12,
+                size: 5 + Math.random() * 6,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                rotation: Math.random() * 360,
+                rotationSpeed: -8 + Math.random() * 16,
+                opacity: 1
+            });
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            let active = false;
+
+            particles.forEach(p => {
+                if (p.opacity <= 0) return;
+                active = true;
+
+                p.x += Math.cos(p.angle) * p.velocity;
+                p.y += Math.sin(p.angle) * p.velocity + p.gravity;
+                p.velocity *= p.friction;
+                p.opacity -= 0.007;
+                p.rotation += p.rotationSpeed;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation * Math.PI / 180);
+                ctx.globalAlpha = p.opacity;
+                ctx.fillStyle = p.color;
+                ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                ctx.restore();
+            });
+
+            if (active) {
+                requestAnimationFrame(animate);
+            } else {
+                canvas.remove();
+            }
+        }
+
+        animate();
+    }
+
     // ─── Paystack Redirect Verification Callback ─────────────────────────────
     async function handlePaystackCallback(reference) {
         // Create full-screen loading spinner overlay
@@ -1405,7 +1510,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Check status via our secure backend API
-            const res = await fetch(`/api/verify-payment?reference=${encodeURIComponent(reference)}`);
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
+            const res = await fetch(`${apiBase}/api/verify-payment?reference=${encodeURIComponent(reference)}`);
             
             if (!res.ok) {
                 throw new Error(`Server error: ${res.status}`);
@@ -1442,37 +1548,109 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.warn('Firebase order write failed (payment still confirmed):', dbErr.message);
                 }
 
-                // Build WhatsApp message
-                let itemsText = '';
-                if (orderData.items && orderData.items.length) {
-                    orderData.items.forEach((item, index) => {
-                        const itemTotal = item.price * item.quantity;
-                        itemsText += `${index + 1}. *${item.name}* x${item.quantity} (₦${formatMoney(itemTotal)})\n`;
-                    });
+                // Send EmailJS Thank You Email via browser REST API (bypasses adblockers/script-prevention)
+                if (orderData.customerEmail && emailjsPublicKey) {
+                    try {
+                        const orderSummaryHtml = orderData.items.map(item => `
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px 0; font-size: 14px; color: #334155;">${item.name}</td>
+                                <td style="padding: 12px 0; text-align: center; font-size: 14px; color: #475569;">x${item.quantity}</td>
+                                <td style="padding: 12px 0; text-align: right; font-size: 14px; font-weight: 600; color: #0f172a;">₦ ${formatMoney(item.price * item.quantity)}</td>
+                            </tr>
+                        `).join('');
+
+                        fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                service_id: emailjsServiceId,
+                                template_id: emailjsTemplateId,
+                                user_id: emailjsPublicKey,
+                                template_params: {
+                                    to_email: orderData.customerEmail,
+                                    to_name: orderData.customerName,
+                                    order_id: orderId,
+                                    customer_phone: orderData.customerPhone,
+                                    delivery_address: orderData.address,
+                                    order_summary_html: orderSummaryHtml,
+                                    total_amount: `₦ ${formatMoney(orderData.total || 0)}`
+                                }
+                            })
+                        }).then(r => {
+                            if (r.ok) {
+                                console.log('✉️ EmailJS thank you email sent successfully via client REST API!');
+                            } else {
+                                r.text().then(txt => console.error('❌ EmailJS REST failed:', txt));
+                            }
+                        }).catch(e => console.error('❌ EmailJS REST network error:', e));
+                    } catch (emailErr) {
+                        console.error('EmailJS payload compile failed:', emailErr);
+                    }
                 }
 
-                const text = `🛍️ *PAID ORDER - 12 DEGREES* (Ref: ${orderId})\n` +
-                             `-----------------------------------\n` +
-                             `👤 *Customer:* ${orderData.customerName || 'N/A'}\n` +
-                             `📞 *WhatsApp:* ${orderData.customerPhone || 'N/A'}\n` +
-                             `📍 *Address:* ${orderData.address || 'N/A'}\n` +
-                             `💳 *Payment:* Card Payment (Paystack Verified ✅)\n` +
-                             `🔑 *Paystack Ref:* ${reference}\n\n` +
-                             `*Items Ordered:*\n${itemsText}\n` +
-                             `🔥 *Order Total:* ₦ ${formatMoney(orderData.total || 0)}\n` +
-                             `-----------------------------------\n` +
-                             `Payment successfully processed! Please confirm receipt.`;
 
-                const waUrl = `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(text)}`;
 
-                // Remove loading overlay and show success modal
+                // Remove loading overlay
                 loadingDiv.remove();
-                const successTitle = document.querySelector('.success-title');
-                const successDesc = document.querySelector('.success-desc');
-                if (successTitle) successTitle.textContent = "Payment Successful! 🎉";
-                if (successDesc) successDesc.textContent = "Your card payment was verified by Paystack ...";
+
+                // Dynamically update success modal contents into a gorgeous digital receipt card
+                const successBody = successModal.querySelector('.success-body');
+                if (successBody) {
+                    let itemsHtml = '';
+                    if (orderData.items && orderData.items.length) {
+                        itemsHtml = `
+                            <div style="margin: 16px 0 8px 0; border-top: 1px dashed var(--border); padding-top: 12px; text-align: left;">
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.5px;">Items Summary</div>
+                                ${orderData.items.map(item => `
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; line-height: 1.4;">
+                                        <span style="color: var(--ink-2); margin-right: 12px;">${item.name} <strong style="color: var(--text-muted); font-weight: normal; font-size: 11px;">x${item.quantity}</strong></span>
+                                        <strong style="color: var(--ink); white-space: nowrap;">₦ ${formatMoney(item.price * item.quantity)}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    successBody.innerHTML = `
+                        <div class="success-icon-circle" style="background: rgba(40,167,69,0.1); color: #28a745; margin: 0 auto 20px auto; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </div>
+                        <h3 class="success-title" style="font-family: var(--fh); font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 8px;">Payment Successful! 🎉</h3>
+                        <p class="success-desc" style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Thank you for shopping with 12 Degrees. Your order has been placed successfully.</p>
+                        
+                        <div style="background: var(--bg-alt, #f8fafc); border-radius: 12px; padding: 16px; margin: 20px 0; text-align: left; border: 1px solid var(--border, #e2e8f0); font-family: 'DM Sans', sans-serif;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
+                                <span>Order Number:</span>
+                                <strong style="color: var(--ink);">${orderId}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
+                                <span>Transaction Ref:</span>
+                                <strong style="color: var(--ink); font-size: 11px;">${reference.substring(0, 16)}...</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); border-bottom: 1px dashed var(--border, #e2e8f0); padding-bottom: 12px;">
+                                <span>Total Paid:</span>
+                                <strong style="color: var(--primary, #e60012); font-size: 15px;">₦ ${formatMoney(orderData.total || 0)}</strong>
+                            </div>
+                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px;">Delivery Details</div>
+                            <div style="font-size: 13px; color: var(--ink); font-weight: 600; margin-bottom: 2px;">${orderData.customerName || 'N/A'} (${orderData.customerPhone || 'N/A'})</div>
+                            <div style="font-size: 13px; color: var(--ink-2); line-height: 1.4;">${orderData.address || 'N/A'}</div>
+                            ${itemsHtml}
+                        </div>
+                        
+                        <button class="btn btn-primary" id="close-success-receipt-btn" style="width: 100%; height: 48px; border-radius: var(--r-md); font-weight: 700; margin-top: 10px;">Continue Shopping</button>
+                    `;
+
+                    // Wire up the close button
+                    const closeBtn = document.getElementById('close-success-receipt-btn');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => {
+                            successModal.classList.remove('open');
+                        });
+                    }
+                }
+
                 successModal.classList.add('open');
-                window.open(waUrl, '_blank');
+                triggerConfetti();
 
             } else {
                 throw new Error("Transaction not successful. Status: " + (paymentDetails.status || 'unknown'));

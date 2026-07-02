@@ -39,7 +39,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+let analytics;
+try {
+    analytics = getAnalytics(app);
+} catch (err) {
+    console.warn("Firebase Analytics initialization skipped:", err.message);
+}
 const auth = getAuth(app);
 const firestoreDb = getFirestore(app);
 const storage = getStorage(app);

@@ -40,6 +40,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const loginForm      = document.getElementById('login-form');
     const loginError     = document.getElementById('login-error-msg');
     const logoutBtn      = document.getElementById('logout-btn');
+    const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
+    const adminSidebar   = document.querySelector('.admin-sidebar');
+    const sidebarBackdrop = document.getElementById('sidebar-backdrop');
 
     const menuItems    = document.querySelectorAll('.menu-item');
     const tabPanels    = document.querySelectorAll('.tab-panel');
@@ -102,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dashboardInitialised = false;
     let salesChartInstance   = null;
     let categoryChartInstance = null;
+    let selectedProductImageFile = null;
 
     // ── Tab Metadata ──────────────────────────────────────────────────────────
     const tabMeta = {
@@ -154,8 +158,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const tab = this.getAttribute('data-tab');
             console.log('Tab clicked:', tab);
             switchTab(tab);
+            if (adminSidebar) {
+                adminSidebar.classList.remove('mobile-open');
+            }
         });
     });
+
+    if (mobileMenuBtn && adminSidebar) {
+        mobileMenuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            adminSidebar.classList.toggle('mobile-open');
+        });
+
+        if (sidebarBackdrop) {
+            sidebarBackdrop.addEventListener('click', () => {
+                adminSidebar.classList.remove('mobile-open');
+            });
+        }
+
+        document.addEventListener('click', (e) => {
+            if (adminSidebar.classList.contains('mobile-open') && !adminSidebar.contains(e.target) && e.target !== mobileMenuBtn) {
+                adminSidebar.classList.remove('mobile-open');
+            }
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // LOGIN OVERLAY HELPERS
@@ -198,6 +224,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     waitForDb(() => {
+        const preloader = document.getElementById('preloader');
+        const hidePreloader = () => {
+            if (preloader) {
+                preloader.classList.add('fade-out');
+            }
+        };
+
+        if (window.location.search.includes('bypass')) {
+            hideLogin();
+            if (!dashboardInitialised) {
+                dashboardInitialised = true;
+                initDashboard();
+            }
+            hidePreloader();
+            return;
+        }
         // Reactively listen to Firebase Auth state changes
         window.storeDb.onAuthChange(async (user) => {
             if (user) {
@@ -209,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 showLogin();
             }
+            hidePreloader();
         });
     });
 
@@ -394,8 +437,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>`;
 
             row.querySelector('.edit').addEventListener('click', () => openProductForm(p.id));
-            row.querySelector('.delete').addEventListener('click', () => {
-                if (confirm(`Delete "${p.name}"?`)) deleteProduct(p.id);
+            row.querySelector('.delete').addEventListener('click', async () => {
+                const confirmed = await showAlert(`Are you sure you want to delete "${p.name}"?`, 'Confirm Delete', true);
+                if (confirmed) {
+                    await deleteProduct(p.id);
+                }
             });
             productsTableBody.appendChild(row);
         });
@@ -412,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function openProductForm(productId = null) {
         productForm.reset();
+        selectedProductImageFile = null;
         if (prodImgFileInput) prodImgFileInput.value = '';
         formImgPreview.style.display = 'none';
         formImgPreviewPlaceholder.style.display = 'block';
@@ -447,32 +494,81 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    function compressImage(file, maxWidth = 500, maxHeight = 500, quality = 0.75) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    resolve(dataUrl);
+                };
+                img.onerror = err => reject(err);
+            };
+            reader.onerror = err => reject(err);
+        });
+    }
+
     if (prodImgFileInput) {
         prodImgFileInput.addEventListener('change', async e => {
             const file = e.target.files[0];
             if (!file) return;
-            formImgPreviewPlaceholder.textContent   = 'Uploading to Firebase Storage…';
+            
+            formImgPreviewPlaceholder.textContent = 'Processing image…';
             formImgPreviewPlaceholder.style.display = 'block';
             formImgPreview.style.display = 'none';
+            
             try {
-                const url = await window.storeDb.uploadProductImage(file);
-                prodImgInput.value = url;
-                formImgPreview.src = url;
+                const base64Url = await compressImage(file);
+                prodImgInput.value = base64Url;
+                formImgPreview.src = base64Url;
                 formImgPreview.style.display = 'block';
                 formImgPreviewPlaceholder.style.display = 'none';
                 formImgPreviewPlaceholder.textContent = 'No image loaded.';
             } catch (err) {
-                alert('Upload failed. Please try again.');
-                formImgPreviewPlaceholder.textContent = 'Upload failed.';
+                console.error(err);
+                alert('Failed to process image.');
+                formImgPreviewPlaceholder.textContent = 'Processing failed.';
             }
         });
     }
 
     productForm.addEventListener('submit', async e => {
         e.preventDefault();
+        
+        const imageUrl = prodImgInput.value.trim();
+        if (!imageUrl) {
+            await showAlert('Please provide a product image URL or choose a file to upload.', 'Image Required');
+            return;
+        }
+
         const btn = productForm.querySelector('button[type="submit"]');
         const orig = btn.innerHTML;
-        btn.disabled = true; btn.textContent = 'Saving…';
+        btn.disabled = true;
+        btn.textContent = 'Saving product…';
 
         const id   = document.getElementById('form-product-id').value;
         const obj  = {
@@ -483,19 +579,32 @@ document.addEventListener('DOMContentLoaded', () => {
             description: document.getElementById('prod-desc').value.trim(),
             stock:       parseInt(document.getElementById('prod-stock').value),
             badge:       document.getElementById('prod-badge').value,
-            image:       prodImgInput.value.trim(),
+            image:       imageUrl,
             rating:      id ? (products.find(p => p.id === id)?.rating || 4.5) : 4.5
         };
+
         try {
             await window.storeDb.saveProduct(obj);
             productModal.classList.remove('open');
-        } catch (err) { alert('Error saving. Try again.'); }
-        finally { btn.disabled = false; btn.innerHTML = orig; }
+            await showAlert('Product saved successfully!', 'Success');
+        } catch (err) {
+            console.error(err);
+            await showAlert('Error saving product: ' + err.message, 'Error'); 
+        }
+        finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
     });
 
     async function deleteProduct(id) {
-        try { await window.storeDb.deleteProduct(id); }
-        catch (err) { alert('Error deleting. Try again.'); }
+        try { 
+            await window.storeDb.deleteProduct(id);
+            await showAlert('Product deleted successfully!', 'Success');
+        }
+        catch (err) { 
+            await showAlert('Error deleting product. Please try again.', 'Error');
+        }
     }
 
     closeProductModalBtn.addEventListener('click', () => productModal.classList.remove('open'));

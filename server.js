@@ -3,9 +3,34 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
 
-const PORT = process.env.PORT || 8080;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+// Load .env file manually to ensure process.env variables are populated
+try {
+    const envPath = path.join(__dirname, '.env');
+    if (fs.existsSync(envPath)) {
+        const envContent = fs.readFileSync(envPath, 'utf8');
+        envContent.split('\n').forEach(line => {
+            const trimmed = line.trim();
+            if (trimmed && !trimmed.startsWith('#')) {
+                const index = trimmed.indexOf('=');
+                if (index > -1) {
+                    const key = trimmed.substring(0, index).trim();
+                    const value = trimmed.substring(index + 1).trim();
+                    // Strip optional outer quotes
+                    const cleanValue = value.replace(/^['"]|['"]$/g, '');
+                    process.env[key] = cleanValue;
+                }
+            }
+        });
+        console.log('📝 Loaded environment variables from .env');
+    }
+} catch (err) {
+    console.error('⚠️ Failed to load .env file manually:', err.message);
+}
+
+const PORT = process.env.PORT || 8080;
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -23,7 +48,29 @@ const MIME_TYPES = {
 const server = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url}`);
 
+    // Enable CORS for API support across local ports
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204);
+        res.end();
+        return;
+    }
+
     const pathname = req.url.split('?')[0].split('#')[0];
+
+    if (pathname === '/api/config') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            emailjsPublicKey: process.env.EMAILJS_PUBLIC_KEY || '',
+            emailjsServiceId: process.env.EMAILJS_SERVICE_ID || '',
+            emailjsTemplateId: process.env.EMAILJS_TEMPLATE_ID || ''
+        }));
+        return;
+    }
+
     const isApiRoute = pathname === '/api/verify-payment' ||
         pathname === '/api/verify-payment.js' ||
         pathname === '/api/paystack/initialize' ||

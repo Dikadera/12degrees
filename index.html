@@ -26,9 +26,25 @@
             }
         }
     </script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 </head>
 
 <body>
+
+    <!-- Premium Preloader Overlay -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <img src="images/logo.png" alt="12 Degrees Logo" class="preloader-logo">
+            <div class="preloader-spinner"></div>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('fade-out');
+        });
+    </script>
 
     <!-- Local file protocol warning banner -->
     <div id="file-protocol-warning"

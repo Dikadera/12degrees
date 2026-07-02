@@ -26,9 +26,25 @@
             }
         }
     </script>
+    <!-- EmailJS SDK -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
 </head>
 
 <body>
+
+    <!-- Premium Preloader Overlay -->
+    <div id="preloader" class="preloader">
+        <div class="preloader-content">
+            <img src="images/logo.png" alt="12 Degrees Logo" class="preloader-logo">
+            <div class="preloader-spinner"></div>
+        </div>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            const preloader = document.getElementById('preloader');
+            if (preloader) preloader.classList.add('fade-out');
+        });
+    </script>
 
     <!-- Local file protocol warning banner -->
     <div id="file-protocol-warning"
@@ -101,19 +117,32 @@
     <!-- Shop Hero Banner -->
     <section class="shop-hero" id="shop-hero">
         <!-- Cross-fading background images for categories -->
-        <div class="shop-hero-bg active" data-bg="all" style="background-image: url('https://images.unsplash.com/photo-1612817288484-6f916007741a?q=90&w=1920&auto=format&fit=crop');"></div>
-        <div class="shop-hero-bg" data-bg="perfumes" style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=90&w=1920&auto=format&fit=crop');"></div>
-        <div class="shop-hero-bg" data-bg="body-lotions" style="background-image: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=90&w=1920&auto=format&fit=crop');"></div>
-        <div class="shop-hero-bg" data-bg="body-scrubs-oils" style="background-image: url('https://images.unsplash.com/photo-1608248597481-496100c80836?q=90&w=1920&auto=format&fit=crop');"></div>
-        <div class="shop-hero-bg" data-bg="hair-products" style="background-image: url('https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=90&w=1920&auto=format&fit=crop');"></div>
-        <div class="shop-hero-bg" data-bg="intimate-care" style="background-image: url('https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg active" data-bg="all"
+            style="background-image: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=90&w=1920&auto=format&fit=crop');">
+        </div>
+        <div class="shop-hero-bg" data-bg="perfumes"
+            style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=90&w=1920&auto=format&fit=crop');">
+        </div>
+        <div class="shop-hero-bg" data-bg="body-lotions"
+            style="background-image: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=90&w=1920&auto=format&fit=crop');">
+        </div>
+        <div class="shop-hero-bg" data-bg="body-scrubs-oils"
+            style="background-image: url('https://images.unsplash.com/photo-1608248597481-496100c80836?q=90&w=1920&auto=format&fit=crop');">
+        </div>
+        <div class="shop-hero-bg" data-bg="hair-products"
+            style="background-image: url('https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=90&w=1920&auto=format&fit=crop');">
+        </div>
+        <div class="shop-hero-bg" data-bg="intimate-care"
+            style="background-image: url('https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=90&w=1920&auto=format&fit=crop');">
+        </div>
 
         <!-- Dark gradient overlay for text legibility -->
         <div class="shop-hero-overlay"></div>
 
         <div class="container shop-hero-content">
             <h1 class="shop-hero-title">The <em id="shop-hero-title-em">Storefront</em></h1>
-            <p class="shop-hero-subtitle" id="shop-hero-subtitle">Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs.</p>
+            <p class="shop-hero-subtitle" id="shop-hero-subtitle">Awka's #1 source for 100% genuine Bath & Body Works,
+                Victoria's Secret, skincare mists, lotions & scrubs.</p>
         </div>
     </section>
 
@@ -221,7 +250,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="cust-email">Email Address</label>
-                            <input type="email" class="form-input" id="cust-email" placeholder="Optional email">
+                            <input type="email" class="form-input" id="cust-email" placeholder=" Email">
                         </div>
                     </div>
                     <div class="form-group">
@@ -236,7 +265,8 @@
                             <div style="font-family:var(--fh); font-size:22px; font-weight:800; color:var(--red)"
                                 id="checkout-total-val">₦ 0</div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submit-order-btn" style="padding:0 32px;">Pay With
+                        <button type="submit" class="btn btn-primary" id="submit-order-btn" style="padding:0 32px;">Pay
+                            With
                             Card</button>
                     </div>
                 </form>
@@ -261,7 +291,8 @@
                     </svg>
                 </div>
                 <h3 class="success-title">Order Received!</h3>
-                <p class="success-desc">Your order has been logged. A WhatsApp tab should have opened to send your order details.</p>
+                <p class="success-desc">Your order has been logged. A WhatsApp tab should have opened to send your order
+                    details.</p>
                 <a href="index.html" class="btn btn-primary" id="success-wa-redirect-btn">Finish ☺️</a>
             </div>
         </div>
@@ -317,8 +348,10 @@
                     <ul>
                         <li><a href="shop.html" onclick="window.filterByCategory('perfumes')">Perfumes & Mists</a></li>
                         <li><a href="shop.html" onclick="window.filterByCategory('body-lotions')">Body Lotions</a></li>
-                        <li><a href="shop.html" onclick="window.filterByCategory('body-scrubs-oils')">Scrubs & Oils</a></li>
-                        <li><a href="shop.html" onclick="window.filterByCategory('intimate-care')">Intimate Care</a></li>
+                        <li><a href="shop.html" onclick="window.filterByCategory('body-scrubs-oils')">Scrubs & Oils</a>
+                        </li>
+                        <li><a href="shop.html" onclick="window.filterByCategory('intimate-care')">Intimate Care</a>
+                        </li>
                     </ul>
                 </div>
 
