@@ -2,10 +2,12 @@
   "name": "12-degrees-store",
   "version": "1.0.0",
   "description": "12 Degrees Bath & Body Store — Awka's premier beauty store",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "vercel-build": "echo 'No build step required'"
   },
   "keywords": ["ecommerce", "beauty", "awka", "paystack"],
   "author": "12 Degrees",

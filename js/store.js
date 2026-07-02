@@ -198,6 +198,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        updateShopHero(currentCategory);
+
         console.log('🎨 Calling renderProducts & renderFeatured...');
         renderProducts();
         renderFeaturedProducts();
@@ -453,6 +455,57 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatMoney(amount) {
         return amount.toLocaleString('en-US');
+    }
+
+    function updateShopHero(category) {
+        const shopHero = document.getElementById('shop-hero');
+        if (!shopHero) return;
+
+        // Toggle active background image
+        const backgrounds = shopHero.querySelectorAll('.shop-hero-bg');
+        backgrounds.forEach(bg => {
+            if (bg.getAttribute('data-bg') === category) {
+                bg.classList.add('active');
+            } else {
+                bg.classList.remove('active');
+            }
+        });
+
+        // Update Title & Subtitle based on selected category
+        const titleEl = shopHero.querySelector('.shop-hero-title');
+        const subtitle = document.getElementById('shop-hero-subtitle');
+        if (!titleEl || !subtitle) return;
+
+        const categoryData = {
+            'all': {
+                title: 'The <em>Storefront</em>',
+                subtitle: "Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs."
+            },
+            'perfumes': {
+                title: 'Perfumes <em>& Mists</em>',
+                subtitle: 'Indulge in our collection of authentic fragrance mists and perfumes. Rich scents that linger all day long.'
+            },
+            'body-lotions': {
+                title: 'Body <em>Lotions</em>',
+                subtitle: 'Deeply hydrate your skin with our premium, skin-loving body lotions and 24-hour moisturizers.'
+            },
+            'body-scrubs-oils': {
+                title: 'Scrubs <em>& Oils</em>',
+                subtitle: 'Polish and nourish your body with sugar scrubs and botanical oils for a glowing, silky-smooth finish.'
+            },
+            'hair-products': {
+                title: 'Hair <em>Products</em>',
+                subtitle: 'Repair, strengthen, and beautify your locks with our curated premium hair care and shampoo collection.'
+            },
+            'intimate-care': {
+                title: 'Intimate <em>Care</em>',
+                subtitle: 'Gentle, pH-balanced washes and soothing care formulated specifically for sensitive skin.'
+            }
+        };
+
+        const data = categoryData[category] || categoryData['all'];
+        titleEl.innerHTML = data.title;
+        subtitle.textContent = data.subtitle;
     }
 
     // --- Cart Functions ---
@@ -828,7 +881,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Request transaction initialization from our secure backend API
-            const response = await fetch('/api/paystack/initialize', {
+            const response = await fetch('/api/verify-payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -940,6 +993,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
 
             currentCategory = btn.getAttribute('data-category');
+            updateShopHero(currentCategory);
             renderProducts();
         });
     }
@@ -1351,7 +1405,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Check status via our secure backend API
-            const res = await fetch(`/api/paystack/verify?reference=${encodeURIComponent(reference)}`);
+            const res = await fetch(`/api/verify-payment?reference=${encodeURIComponent(reference)}`);
             
             if (!res.ok) {
                 throw new Error(`Server error: ${res.status}`);

@@ -99,10 +99,21 @@
     </header>
 
     <!-- Shop Hero Banner -->
-    <section class="shop-hero">
-        <div class="container">
-            <h1 class="shop-hero-title">The <em>Storefront</em></h1>
-            <p class="shop-hero-subtitle">Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs.</p>
+    <section class="shop-hero" id="shop-hero">
+        <!-- Cross-fading background images for categories -->
+        <div class="shop-hero-bg active" data-bg="all" style="background-image: url('https://images.unsplash.com/photo-1612817288484-6f916007741a?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg" data-bg="perfumes" style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg" data-bg="body-lotions" style="background-image: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg" data-bg="body-scrubs-oils" style="background-image: url('https://images.unsplash.com/photo-1608248597481-496100c80836?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg" data-bg="hair-products" style="background-image: url('https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=90&w=1920&auto=format&fit=crop');"></div>
+        <div class="shop-hero-bg" data-bg="intimate-care" style="background-image: url('https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=90&w=1920&auto=format&fit=crop');"></div>
+
+        <!-- Dark gradient overlay for text legibility -->
+        <div class="shop-hero-overlay"></div>
+
+        <div class="container shop-hero-content">
+            <h1 class="shop-hero-title">The <em id="shop-hero-title-em">Storefront</em></h1>
+            <p class="shop-hero-subtitle" id="shop-hero-subtitle">Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs.</p>
         </div>
     </section>
 

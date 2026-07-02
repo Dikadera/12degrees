@@ -6,7 +6,36 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ── DOM References ────────────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════════
+    // STYLED ALERTS
+    // ══════════════════════════════════════════════════════════════════════════
+    const alertModal = document.getElementById('alert-modal');
+    const alertTitle = document.getElementById('alert-title');
+    const alertMessage = document.getElementById('alert-message');
+    const alertConfirmBtn = document.getElementById('alert-confirm-btn');
+    const alertCancelBtn = document.getElementById('alert-cancel-btn');
+
+    function showAlert(message, title = 'Notification', isConfirm = false) {
+        return new Promise((resolve) => {
+            alertTitle.textContent = title;
+            alertMessage.textContent = message;
+            alertCancelBtn.style.display = isConfirm ? 'block' : 'none';
+            alertModal.style.display = 'flex';
+
+            alertConfirmBtn.onclick = () => {
+                alertModal.style.display = 'none';
+                resolve(true);
+            };
+            alertCancelBtn.onclick = () => {
+                alertModal.style.display = 'none';
+                resolve(false);
+            };
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // DOM REFERENCES
+    // ══════════════════════════════════════════════════════════════════════════
     const loginOverlay   = document.getElementById('login-overlay');
     const loginForm      = document.getElementById('login-form');
     const loginError     = document.getElementById('login-error-msg');
@@ -762,13 +791,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function handleDeleteReview(reviewId) {
-        if (confirm('Are you sure you want to delete this review? This will also update the average rating of the corresponding product.')) {
+        const confirmed = await showAlert('Are you sure you want to delete this review? This will also update the average rating of the corresponding product.', 'Delete Review', true);
+        if (confirmed) {
             try {
                 await window.storeDb.deleteReview(reviewId);
-                alert('Review deleted successfully!');
+                await showAlert('Review deleted successfully!', 'Success');
+                renderReviewsTable();
             } catch (err) {
                 console.error("Failed to delete review:", err);
-                alert('Error deleting review.');
+                await showAlert('Error deleting review: ' + err.message, 'Error');
             }
         }
     }

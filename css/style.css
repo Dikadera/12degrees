@@ -2078,40 +2078,57 @@ footer { background: #09090d; }
 
 /* --- Shop Hero Banner --- */
 .shop-hero {
-    background: linear-gradient(135deg, #18181b 0%, #27272a 100%);
-    padding: 80px 0 60px;
+    position: relative;
+    padding: 160px 0 100px; /* adjusted to sit under sticky header and look premium */
     text-align: center;
     color: white;
-    position: relative;
     overflow: hidden;
-    margin-top: 72px; /* to push below sticky header */
+    background: #0d0d0f;
+    margin-top: 0; /* remove margin-top so it slides under floating header */
 }
-.shop-hero::before {
-    content: '';
+.shop-hero-bg {
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(224, 180, 92, 0.05) 0%, transparent 60%);
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    opacity: 0;
+    transition: opacity 0.8s ease, transform 6s ease;
+    transform: scale(1.05);
+    z-index: 0;
+}
+.shop-hero-bg.active {
+    opacity: 0.55; /* perfect opacity so text is readable against the image */
+    transform: scale(1);
+    z-index: 1;
+}
+.shop-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(13,13,15,0.7) 0%, rgba(13,13,15,0.9) 100%);
+    z-index: 2;
     pointer-events: none;
+}
+.shop-hero-content {
+    position: relative;
+    z-index: 3;
 }
 .shop-hero-title {
     font-family: var(--fh);
-    font-size: 42px;
+    font-size: clamp(40px, 6vw, 64px);
     font-weight: 800;
-    margin-bottom: 12px;
-    letter-spacing: -1.5px;
+    margin-bottom: 16px;
+    letter-spacing: -2px;
 }
 .shop-hero-title em {
     font-style: italic;
-    color: var(--gold);
+    color: var(--red);
     font-weight: 400;
 }
 .shop-hero-subtitle {
-    font-size: 16px;
-    color: var(--ink-4);
-    max-width: 600px;
+    font-size: clamp(14px, 2.5vw, 17px);
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 680px;
     margin: 0 auto;
     line-height: 1.6;
 }

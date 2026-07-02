@@ -510,6 +510,18 @@
         </div>
     </div>
 
+    <!-- Styled Alert Modal -->
+    <div class="modal-overlay" id="alert-modal" style="display: none; z-index: 100000;">
+        <div class="modal-content" style="max-width: 400px;">
+            <h3 class="modal-title" id="alert-title">Notification</h3>
+            <p id="alert-message" style="color: var(--admin-text); margin: 16px 0;">Message goes here</p>
+            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <button id="alert-confirm-btn" class="login-btn" style="padding: 10px 24px; cursor: pointer;">OK</button>
+                <button id="alert-cancel-btn" class="shop-link-btn" style="padding: 10px 24px; cursor: pointer; display: none;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DB Scripts -->
     <script type="module" src="js/db.js"></script>
     <!-- Admin Scripts -->
