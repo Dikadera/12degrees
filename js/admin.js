@@ -357,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // KPI METRICS
     // ══════════════════════════════════════════════════════════════════════════
     function updateMetrics() {
-        const totalRev = orders.reduce((s, o) => s + o.total, 0);
+        const totalRev = orders.reduce((s, o) => s + Number(o.total || 0), 0);
         const count    = orders.length;
         const avg      = count > 0 ? Math.round(totalRev / count) : 0;
         const views    = window.storeDb.getViews();
@@ -726,7 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const cust = customerMap.get(phone);
-            cust.totalSpent += order.total || 0;
+            cust.totalSpent += Number(order.total || 0);
             cust.orders.push(order);
 
             if (isNewCustomer) {
@@ -995,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const d = new Date(); d.setDate(d.getDate() - i);
             labels.push(d.toLocaleDateString('en-US', {month:'short',day:'numeric'}));
             const ds = d.toDateString();
-            data.push(orders.filter(o => new Date(o.date).toDateString()===ds).reduce((s,o)=>s+o.total,0));
+            data.push(orders.filter(o => new Date(o.date).toDateString()===ds).reduce((s,o)=>s+Number(o.total || 0),0));
         }
         return { labels, data };
     }
