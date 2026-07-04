@@ -93,10 +93,12 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 console.log('❌ storeDb NOT defined!');
                 products = [];
+                showUIError("Couldn't load products. Please refresh");
             }
         } catch (err) {
-            console.log(`❌ DB Error: ${err.message}`);
+            console.error(`❌ DB Error: ${err.message}`);
             products = [];
+            showUIError("Couldn't load products. Please refresh");
         }
 
         // If products are empty, populate with local default products so storefront is never blank
@@ -570,6 +572,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
+    }
+
+    function showUIError(msg) {
+        const errorHtml = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--red);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; display:inline-block;"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+                <h3>${msg}</h3>
+                <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top:16px; padding: 8px 20px; font-weight:600; cursor:pointer;">Retry Load</button>
+            </div>
+        `;
+        const pg = document.getElementById('product-grid');
+        const fg = document.getElementById('featured-grid');
+        if (pg) pg.innerHTML = errorHtml;
+        if (fg) fg.innerHTML = errorHtml;
     }
 
     function updateShopHero(category) {
