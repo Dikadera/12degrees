@@ -12,7 +12,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=1.2">
+    <link rel="icon" type="image/png" href="images/logo.png">
 
     <!-- Firebase SDK Import Map -->
     <script type="importmap">
@@ -27,7 +28,8 @@
         }
     </script>
     <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js" defer></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"
+        defer></script>
 </head>
 
 <body>
@@ -196,7 +198,7 @@
                 <span class="label-line"></span>
                 <span class="label-text">The Collection</span>
             </div>
-            <div class="featured-section-header">
+            <div class="featured-section-header reveal-on-scroll">
                 <div>
                     <h2 class="shop-title">Best<em>sellers</em></h2>
                     <p style="color:var(--text-muted);font-size:15px;margin-top:6px;">A curated selection of our
@@ -243,7 +245,7 @@
     </section>
 
     <!-- Interactive Scent Finder Quiz Section -->
-    <section class="scent-quiz-section" id="scent-finder">
+    <section class="scent-quiz-section reveal-on-scroll" id="scent-finder">
         <div class="container">
             <div class="quiz-card-wrapper">
                 <!-- Step 0: Intro State -->
@@ -296,14 +298,14 @@
     </section>
 
     <!-- ─── Customer Reviews Section ────────────────────────────── -->
-    <section class="reviews-section-full" id="reviews">
+    <section class="reviews-section-full reveal-on-scroll" id="reviews">
         <div class="container">
             <!-- Header -->
             <div class="section-label">
                 <span class="label-line"></span>
                 <span class="label-text">Customer Reviews</span>
             </div>
-            <div class="featured-section-header" style="margin-bottom:36px;">
+            <div class="featured-section-header reveal-on-scroll reveal-delay-1" style="margin-bottom:36px;">
                 <div>
                     <h2 class="shop-title">What Our <em>Customers</em> Say</h2>
                     <p style="color:var(--text-muted);font-size:15px;margin-top:6px;">Real reviews from real shoppers in
@@ -715,8 +717,8 @@
     </footer>
 
     <!-- Scripts -->
-    <script type="module" src="js/db.js"></script>
-    <script type="module" src="js/store.js"></script>
+    <script type="module" src="js/db.js?v=1.2"></script>
+    <script type="module" src="js/store.js?v=1.2"></script>
 
     <!-- Native scripts that run even if modules are blocked by browser CORS policy on file:// protocol -->
     <script>

@@ -270,6 +270,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (paystackRef) {
             handlePaystackCallback(paystackRef);
         }
+
+        // Initialize scroll animations
+        initScrollReveal();
+
+        // Initialize mouse parallax motion dynamics
+        initHeroParallax();
     }
 
     // --- Render Products ---
@@ -308,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         filtered.forEach(product => {
             const card = document.createElement('div');
-            card.className = 'product-card';
+            card.className = 'product-card reveal-on-scroll';
             card.setAttribute('data-id', product.id);
 
             // Badges
@@ -364,6 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             productGrid.appendChild(card);
         });
+        initScrollReveal();
     }
 
     // --- Featured Products (Homepage teaser — top-rated, filterable by category pill) ---
@@ -399,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         featured.forEach(product => {
             const card = document.createElement('div');
-            card.className = 'product-card';
+            card.className = 'product-card reveal-on-scroll';
             card.setAttribute('data-id', product.id);
 
             let badgeHTML = '';
@@ -455,6 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             featuredGrid.appendChild(card);
         });
+        initScrollReveal();
 
         console.log(`✅ Rendered ${featured.length} featured products (grid has ${featuredGrid.children.length} children)`);
 
@@ -485,6 +493,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function formatMoney(amount) {
         return amount.toLocaleString('en-US');
+    }
+
+    function initScrollReveal() {
+        const revealElements = document.querySelectorAll('.reveal-on-scroll');
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.05,
+                rootMargin: '0px 0px -20px 0px'
+            });
+
+            revealElements.forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top >= 0 && rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)) {
+                    el.classList.add('revealed');
+                } else {
+                    observer.observe(el);
+                }
+            });
+        } else {
+            revealElements.forEach(el => el.classList.add('revealed'));
+        }
+    }
+
+    function initHeroParallax() {
+        const heroes = [
+            { container: document.getElementById('home'), bg: document.getElementById('hero-carousel'), content: document.querySelector('.hero-inner') },
+            { container: document.getElementById('shop-hero'), bg: document.querySelector('.shop-hero-bg'), content: document.querySelector('.shop-hero-content') }
+        ];
+
+        heroes.forEach(hero => {
+            if (!hero.container) return;
+            
+            if (hero.bg) {
+                hero.bg.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+            }
+            if (hero.content) {
+                hero.content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
+                hero.container.style.perspective = '1000px';
+            }
+
+            hero.container.addEventListener('mousemove', (e) => {
+                const rect = hero.container.getBoundingClientRect();
+                const x = (e.clientX - rect.left) - (rect.width / 2);
+                const y = (e.clientY - rect.top) - (rect.height / 2);
+
+                const bgMoveX = x * -0.035;
+                const bgMoveY = y * -0.035;
+                const contentMoveX = x * 0.02;
+                const contentMoveY = y * 0.02;
+                const contentRotateY = x * 0.01;
+                const contentRotateX = y * -0.01;
+
+                if (hero.bg) {
+                    const isShop = hero.container.id === 'shop-hero';
+                    hero.bg.style.transform = `scale(${isShop ? 1.08 : 1.02}) translate(${bgMoveX}px, ${bgMoveY}px)`;
+                }
+                if (hero.content) {
+                    hero.content.style.transform = `translate3d(${contentMoveX}px, ${contentMoveY}px, 0) rotateX(${contentRotateX}deg) rotateY(${contentRotateY}deg)`;
+                }
+            });
+
+            hero.container.addEventListener('mouseleave', () => {
+                if (hero.bg) {
+                    hero.bg.style.transform = '';
+                }
+                if (hero.content) {
+                    hero.content.style.transform = '';
+                }
+            });
+        });
     }
 
     function updateShopHero(category) {
@@ -654,10 +739,10 @@ document.addEventListener('DOMContentLoaded', () => {
         cartQtyCount.innerText = totalItems;
         cartTotalPrice.innerText = `₦ ${formatMoney(totalPrice)}`;
 
-        // Trigger header badge bounce
+        // Trigger header cart button bounce
         if (totalItems > 0) {
-            cartCountBadge.classList.add('bounce');
-            setTimeout(() => cartCountBadge.classList.remove('bounce'), 300);
+            cartToggleBtn.classList.add('cart-bounce-anim');
+            setTimeout(() => cartToggleBtn.classList.remove('cart-bounce-anim'), 650);
         }
     }
 
