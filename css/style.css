@@ -144,10 +144,19 @@ body.dark-mode .ticker-bar .ticker-dot {
 
 /* Scrolled state — added by JS */
 #site-header.scrolled {
-    background: transparent;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    border-bottom: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+}
+
+#site-header.scrolled .header-container {
+    height: 70px;
+}
+
+#site-header.scrolled .logo-img {
+    height: 48px;
 }
 
 #site-header.scrolled .logo {
@@ -168,8 +177,9 @@ body.dark-mode .ticker-bar .ticker-dot {
 }
 
 body.dark-mode #site-header.scrolled {
-    background: transparent;
-    border-bottom: 1px solid transparent;
+    background: rgba(9, 9, 11, 0.88);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
 }
 
 /* Nav links white when transparent (over hero) */
