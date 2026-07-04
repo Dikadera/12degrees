@@ -87,18 +87,23 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             if (window.storeDb) {
                 console.log('✅ storeDb found, waiting for ready...');
-                await window.storeDb.ready;
+                
+                // Race the database ready promise against a 3.5-second timeout
+                // This prevents the page from remaining blank if Firestore is blocked by adblockers/privacy settings
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Database load timed out')), 3500)
+                );
+                
+                await Promise.race([window.storeDb.ready, timeoutPromise]);
                 products = window.storeDb.getProducts();
                 console.log(`📊 Got ${products.length} products from DB`);
             } else {
                 console.log('❌ storeDb NOT defined!');
                 products = [];
-                showUIError("Couldn't load products. Please refresh");
             }
         } catch (err) {
-            console.error(`❌ DB Error: ${err.message}`);
+            console.warn(`⚠️ DB load failed or timed out: ${err.message}. Loading default fallback products...`);
             products = [];
-            showUIError("Couldn't load products. Please refresh");
         }
 
         // If products are empty, populate with local default products so storefront is never blank
