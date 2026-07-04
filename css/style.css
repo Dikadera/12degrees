@@ -2408,3 +2408,61 @@ body.dark-mode .preloader-spinner {
 .cart-bounce-anim {
     animation: cart-bounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* Dynamic Luxury Mist / Fog Effect */
+.hero-mist-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 2; /* Sits above background image/carousel, but below text overlay */
+}
+
+.mist-cloud {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 60%, transparent 100%);
+    filter: blur(65px);
+    mix-blend-mode: screen;
+    will-change: transform, opacity;
+}
+
+body.dark-mode .mist-cloud {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 60%, transparent 100%);
+    filter: blur(80px);
+}
+
+.mist-cloud-1 {
+    width: 700px; height: 700px;
+    top: -15%; left: -25%;
+    animation: mist-drift-1 38s infinite alternate ease-in-out;
+}
+
+.mist-cloud-2 {
+    width: 900px; height: 900px;
+    bottom: -25%; right: -30%;
+    animation: mist-drift-2 52s infinite alternate ease-in-out;
+    opacity: 0.85;
+}
+
+.mist-cloud-3 {
+    width: 600px; height: 600px;
+    top: 25%; left: 35%;
+    animation: mist-drift-3 44s infinite alternate ease-in-out;
+    opacity: 0.7;
+}
+
+@keyframes mist-drift-1 {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    100% { transform: translate(18%, 10%) scale(1.25) rotate(60deg); }
+}
+
+@keyframes mist-drift-2 {
+    0% { transform: translate(0, 0) scale(1.15) rotate(0deg); }
+    100% { transform: translate(-15%, -12%) scale(0.9) rotate(-45deg); }
+}
+
+@keyframes mist-drift-3 {
+    0% { transform: translate(0, 0) scale(0.85) rotate(0deg); }
+    100% { transform: translate(10%, -18%) scale(1.2) rotate(90deg); }
+}
