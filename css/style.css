@@ -395,10 +395,10 @@ nav { display: flex; gap: 2px; }
     inset: 0;
     background:
         linear-gradient(105deg,
-            rgba(0,0,0,0.92) 0%,
-            rgba(10,10,10,0.80) 55%,
-            rgba(0,0,0,0.72) 100%),
-        linear-gradient(0deg, rgba(0,0,0,0.75) 0%, transparent 55%);
+            rgba(0,0,0,0.75) 0%,
+            rgba(10,10,10,0.60) 55%,
+            rgba(0,0,0,0.50) 100%),
+        linear-gradient(0deg, rgba(0,0,0,0.65) 0%, transparent 55%);
     z-index: 3;
     pointer-events: none;
 }
@@ -410,10 +410,10 @@ body.dark-mode .hero {
 body.dark-mode .hero-overlay {
     background:
         linear-gradient(105deg,
-            rgba(0,0,0,0.92) 0%,
-            rgba(10,10,10,0.80) 55%,
-            rgba(0,0,0,0.72) 100%),
-        linear-gradient(0deg, rgba(0,0,0,0.75) 0%, transparent 55%);
+            rgba(0,0,0,0.78) 0%,
+            rgba(10,10,10,0.62) 55%,
+            rgba(0,0,0,0.52) 100%),
+        linear-gradient(0deg, rgba(0,0,0,0.68) 0%, transparent 55%);
 }
 
 /* Mood-tinted overlay variations */
@@ -440,6 +440,79 @@ body.dark-mode .hero-overlay {
             rgba(70,40,0,0.55) 55%,
             rgba(0,0,0,0.28) 100%),
         linear-gradient(0deg, rgba(0,0,0,0.55) 0%, transparent 50%);
+}
+
+/* ── Dynamic Mist / Fog Effects ── */
+.hero-mist-container {
+    position: absolute;
+    inset: 0;
+    z-index: 4; /* above hero-overlay (3), below hero-inner (5) */
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.mist-cloud {
+    position: absolute;
+    border-radius: 50%;
+    mix-blend-mode: screen; /* additively brighten — punches through dark overlay */
+    will-change: transform, opacity;
+    animation: mist-drift ease-in-out infinite;
+}
+
+.mist-cloud-1 {
+    width: 90vw;
+    height: 60vh;
+    top: -10%;
+    left: -20%;
+    opacity: 0.75;
+    animation-duration: 26s;
+    animation-delay: 0s;
+    background: radial-gradient(ellipse at 40% 50%,
+        rgba(255, 220, 230, 0.75) 0%,
+        rgba(255, 200, 215, 0.45) 35%,
+        rgba(220, 180, 200, 0.15) 65%,
+        transparent 80%);
+    filter: blur(55px);
+}
+
+.mist-cloud-2 {
+    width: 70vw;
+    height: 55vh;
+    bottom: 0%;
+    right: -15%;
+    opacity: 0.65;
+    animation-duration: 34s;
+    animation-delay: -10s;
+    background: radial-gradient(ellipse at 60% 40%,
+        rgba(200, 225, 255, 0.70) 0%,
+        rgba(180, 210, 250, 0.40) 35%,
+        rgba(160, 190, 230, 0.12) 65%,
+        transparent 80%);
+    filter: blur(65px);
+}
+
+.mist-cloud-3 {
+    width: 110vw;
+    height: 40vh;
+    bottom: -5%;
+    left: -5%;
+    opacity: 0.55;
+    animation-duration: 42s;
+    animation-delay: -20s;
+    background: radial-gradient(ellipse at 35% 70%,
+        rgba(255, 255, 255, 0.80) 0%,
+        rgba(240, 240, 255, 0.45) 40%,
+        rgba(220, 220, 240, 0.15) 65%,
+        transparent 80%);
+    filter: blur(50px);
+}
+
+@keyframes mist-drift {
+    0%   { transform: translateX(0)    translateY(0)   scale(1);    opacity: 0.7; }
+    20%  { transform: translateX(5%)   translateY(-3%) scale(1.04); opacity: 0.85; }
+    50%  { transform: translateX(9%)   translateY(2%)  scale(1.08); opacity: 0.65; }
+    80%  { transform: translateX(3%)   translateY(-1%) scale(1.03); opacity: 0.80; }
+    100% { transform: translateX(0)    translateY(0)   scale(1);    opacity: 0.7; }
 }
 
 /* ── Carousel dot indicators ── */
@@ -904,6 +977,10 @@ body.dark-mode .spotlight-btn:hover {
     flex-direction: column;
     gap: 12px;
     transition: transform .25s var(--ease), box-shadow .25s var(--ease);
+    overflow: hidden;       /* prevent children from bleeding outside */
+    min-width: 0;           /* allow flex shrink below content size */
+    width: 100%;            /* always fill its grid cell */
+    box-sizing: border-box;
 }
 .review-card:hover { transform: translateY(-4px); box-shadow: var(--sh-lg); }
 
@@ -923,12 +1000,12 @@ body.dark-mode .spotlight-btn:hover {
     font-family: var(--fh);
 }
 
-.reviewer-info { flex: 1; min-width: 0; }
-.reviewer-name { font-weight: 700; font-size: 15px; }
-.reviewer-product { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reviewer-info { flex: 1; min-width: 0; overflow: hidden; }
+.reviewer-name { font-weight: 700; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reviewer-product { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 
 .review-stars { color: #f59e0b; font-size: 16px; letter-spacing: 1px; }
-.review-comment { font-size: 14px; line-height: 1.65; color: var(--text-muted); flex: 1; }
+.review-comment { font-size: 14px; line-height: 1.65; color: var(--text-muted); flex: 1; word-break: break-word; overflow-wrap: break-word; }
 .review-date { font-size: 11px; color: var(--text-muted); opacity: .7; }
 
 /* Submit Review Form */
@@ -976,7 +1053,11 @@ body.dark-mode .spotlight-btn:hover {
 @media (max-width: 768px) {
     .featured-section-header { flex-direction: column; align-items: flex-start; }
     .review-form-card { padding: 24px 20px; }
-    .reviews-grid { grid-template-columns: 1fr; }
+    .reviews-grid { grid-template-columns: 1fr; gap: 14px; }
+    .review-card { padding: 18px 16px; }
+    .reviewer-name { font-size: 14px; }
+    .reviewer-product { font-size: 11px; }
+    .review-comment { font-size: 13px; }
 }
 
 .shop-section-header {
