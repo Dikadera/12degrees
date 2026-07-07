@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=1.2">
     <link rel="icon" type="image/png" href="images/logo.png">
@@ -127,19 +127,19 @@
         <div class="shop-hero-bg active" data-bg="all"
             style="background-image: url('https://images.unsplash.com/photo-1501004318641-b39e6451bec6?q=90&w=1920&auto=format&fit=crop');">
         </div>
-        <div class="shop-hero-bg" data-bg="perfumes"
+        <div class="shop-hero-bg" data-bg="1"
             style="background-image: url('https://images.unsplash.com/photo-1594035910387-fea47794261f?q=90&w=1920&auto=format&fit=crop');">
         </div>
-        <div class="shop-hero-bg" data-bg="body-lotions"
+        <div class="shop-hero-bg" data-bg="2"
             style="background-image: url('https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=90&w=1920&auto=format&fit=crop');">
         </div>
-        <div class="shop-hero-bg" data-bg="body-scrubs-oils"
+        <div class="shop-hero-bg" data-bg="3"
             style="background-image: url('https://images.unsplash.com/photo-1608248597481-496100c80836?q=90&w=1920&auto=format&fit=crop');">
         </div>
-        <div class="shop-hero-bg" data-bg="hair-products"
+        <div class="shop-hero-bg" data-bg="4"
             style="background-image: url('https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=90&w=1920&auto=format&fit=crop');">
         </div>
-        <div class="shop-hero-bg" data-bg="intimate-care"
+        <div class="shop-hero-bg" data-bg="5"
             style="background-image: url('https://images.unsplash.com/photo-1526947425960-945c6e72858f?q=90&w=1920&auto=format&fit=crop');">
         </div>
 
@@ -180,12 +180,7 @@
 
             <!-- Categories -->
             <div class="category-scroll" id="categories-container">
-                <button class="category-btn active" data-category="all">All</button>
-                <button class="category-btn" data-category="perfumes">Perfumes & Mists</button>
-                <button class="category-btn" data-category="body-lotions">Body Lotions</button>
-                <button class="category-btn" data-category="body-scrubs-oils">Scrubs & Oils</button>
-                <button class="category-btn" data-category="hair-products">Hair Products</button>
-                <button class="category-btn" data-category="intimate-care">Intimate Care</button>
+                <!-- Dynamically populated from Firestore -->
             </div>
 
             <!-- Products Grid -->
@@ -265,6 +260,21 @@
                         <textarea class="form-input" id="cust-address" style="height: 80px; resize: none;"
                             placeholder="Specify street name, hostel, plaza, landmarks, etc." required></textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="payment-selector-label">Payment Method *</label>
+                        <div class="payment-selector" id="payment-gateway-selector">
+                            <label class="payment-option active" data-gateway="paystack">
+                                <input type="radio" name="payment_gateway" value="paystack" checked>
+                                <img src="images/paystack-logo.svg" alt="Paystack" class="payment-option-logo" style="height: 18px;">
+                                <span class="payment-option-title">Paystack</span>
+                            </label>
+                            <label class="payment-option" data-gateway="flutterwave">
+                                <input type="radio" name="payment_gateway" value="flutterwave">
+                                <img src="images/flutterwave-logo.svg" alt="Flutterwave" class="payment-option-logo" style="height: 18px;">
+                                <span class="payment-option-title">Flutterwave</span>
+                            </label>
+                        </div>
+                    </div>
                     <div class="checkout-footer-row"
                         style="display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding-top:20px; border-top:1px solid var(--border)">
                         <div>
@@ -272,9 +282,7 @@
                             <div style="font-family:var(--fh); font-size:22px; font-weight:800; color:var(--red)"
                                 id="checkout-total-val">₦ 0</div>
                         </div>
-                        <button type="submit" class="btn btn-primary" id="submit-order-btn" style="padding:0 32px;">Pay
-                            With
-                            Card</button>
+                        <button type="submit" class="btn btn-primary" id="submit-order-btn" style="padding:0 32px;">Pay Securely with Paystack</button>
                     </div>
                 </form>
             </div>
@@ -423,7 +431,7 @@
         resize();
         window.addEventListener('resize', resize);
 
-        const PARTICLE_COUNT = 70;
+        const PARTICLE_COUNT = 20;
         const particles = [];
 
         function randBetween(a, b) { return a + Math.random() * (b - a); }

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/style.css?v=1.2">
     <link rel="icon" type="image/png" href="images/logo.png">
@@ -219,12 +219,7 @@
 
             <!-- Category Pills -->
             <div class="category-scroll" id="featured-categories" style="margin-bottom:24px;">
-                <button class="category-btn active" data-cat="all">All</button>
-                <button class="category-btn" data-cat="perfumes">Perfumes &amp; Mists</button>
-                <button class="category-btn" data-cat="body-lotions">Body Lotions</button>
-                <button class="category-btn" data-cat="body-scrubs-oils">Scrubs &amp; Oils</button>
-                <button class="category-btn" data-cat="hair-products">Hair Products</button>
-                <button class="category-btn" data-cat="intimate-care">Intimate Care</button>
+                <!-- Dynamically populated from Firestore -->
             </div>
 
             <!-- Featured Product Cards -->
@@ -594,6 +589,23 @@
                         <input type="text" class="form-input" id="cust-address" placeholder="Street name, area, city"
                             required>
                     </div>
+                    <div class="form-group">
+                        <label class="payment-selector-label">Payment Method *</label>
+                        <div class="payment-selector" id="payment-gateway-selector">
+                            <label class="payment-option active" data-gateway="paystack">
+                                <input type="radio" name="payment_gateway" value="paystack" checked>
+                                <img src="images/paystack-logo.svg" alt="Paystack" class="payment-option-logo"
+                                    style="height: 18px;">
+                                <span class="payment-option-title">Paystack</span>
+                            </label>
+                            <label class="payment-option" data-gateway="flutterwave">
+                                <input type="radio" name="payment_gateway" value="flutterwave">
+                                <img src="images/flutterwave-logo.svg" alt="Flutterwave" class="payment-option-logo"
+                                    style="height: 18px;">
+                                <span class="payment-option-title">Flutterwave</span>
+                            </label>
+                        </div>
+                    </div>
                     <div class="order-summary-box">
                         <div class="order-summary-row">
                             <span>Total Items</span>
@@ -689,10 +701,10 @@
                 <div class="footer-links-col">
                     <h4>Categories</h4>
                     <ul>
-                        <li><a href="shop.html?cat=perfumes">Perfumes &amp; Mists</a></li>
-                        <li><a href="shop.html?cat=body-lotions">Body Lotions</a></li>
-                        <li><a href="shop.html?cat=body-scrubs-oils">Scrubs &amp; Oils</a></li>
-                        <li><a href="shop.html?cat=intimate-care">Intimate Care</a></li>
+                        <li><a href="shop.html?cat=1">Perfumes &amp; Mists</a></li>
+                        <li><a href="shop.html?cat=2">Body Lotions</a></li>
+                        <li><a href="shop.html?cat=3">Scrubs &amp; Oils</a></li>
+                        <li><a href="shop.html?cat=5">Intimate Care</a></li>
                     </ul>
                 </div>
 
@@ -704,7 +716,7 @@
                         <li style="color:#555; font-size:13px; line-height:1.6;">Shop B7 & B8, Unizik Dongreg Plaza,
                             Ifite Awka.</li>
                     </ul>
-                    <a href="admin.html" class="admin-link">Admin Panel →</a>
+                    <!-- <a href="admin.html" class="admin-link">Admin Panel →</a> -->
                 </div>
             </div>
         </div>
@@ -795,98 +807,98 @@
 
     <!-- ── Mist Raindrop Particle System ── -->
     <script>
-    (function() {
-        const canvas = document.getElementById('fog-canvas');
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
+        (function () {
+            const canvas = document.getElementById('fog-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
 
-        function resize() {
-            canvas.width  = window.innerWidth;
-            canvas.height = window.innerHeight;
-            canvas.style.width  = window.innerWidth  + 'px';
-            canvas.style.height = window.innerHeight + 'px';
-        }
-        resize();
-        window.addEventListener('resize', resize);
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                canvas.style.width = window.innerWidth + 'px';
+                canvas.style.height = window.innerHeight + 'px';
+            }
+            resize();
+            window.addEventListener('resize', resize);
 
-        const PARTICLE_COUNT = 70;
-        const particles = [];
+            const PARTICLE_COUNT = 20;
+            const particles = [];
 
-        function randBetween(a, b) { return a + Math.random() * (b - a); }
+            function randBetween(a, b) { return a + Math.random() * (b - a); }
 
-        function createParticle(startAtTop) {
-            const isRed = Math.random() > 0.5;
-            return {
-                x:       randBetween(0, canvas.width),
-                y:       startAtTop ? randBetween(-canvas.height, 0) : randBetween(0, canvas.height),
-                size:    randBetween(3, 8),
-                speedY:  randBetween(0.35, 1.1),   // drift downward
-                speedX:  randBetween(-0.25, 0.25), // slight horizontal sway
-                opacity: randBetween(0.30, 0.75),
-                wobble:  randBetween(0, Math.PI * 2),
-                wobbleSpeed: randBetween(0.008, 0.022),
-                r: isRed ? 230 : 255,
-                g: isRed ? 0   : 255,
-                b: isRed ? 18  : 255,
-            };
-        }
+            function createParticle(startAtTop) {
+                const isRed = Math.random() > 0.5;
+                return {
+                    x: randBetween(0, canvas.width),
+                    y: startAtTop ? randBetween(-canvas.height, 0) : randBetween(0, canvas.height),
+                    size: randBetween(3, 8),
+                    speedY: randBetween(0.35, 1.1),   // drift downward
+                    speedX: randBetween(-0.25, 0.25), // slight horizontal sway
+                    opacity: randBetween(0.30, 0.75),
+                    wobble: randBetween(0, Math.PI * 2),
+                    wobbleSpeed: randBetween(0.008, 0.022),
+                    r: isRed ? 230 : 255,
+                    g: isRed ? 0 : 255,
+                    b: isRed ? 18 : 255,
+                };
+            }
 
-        // Initialise particles scattered across full page height
-        for (let i = 0; i < PARTICLE_COUNT; i++) {
-            particles.push(createParticle(false));
-        }
+            // Initialise particles scattered across full page height
+            for (let i = 0; i < PARTICLE_COUNT; i++) {
+                particles.push(createParticle(false));
+            }
 
-        let last = 0;
-        function draw(ts) {
-            const dt = Math.min(ts - last, 50); // cap at 50ms to avoid jumps
-            last = ts;
+            let last = 0;
+            function draw(ts) {
+                const dt = Math.min(ts - last, 50); // cap at 50ms to avoid jumps
+                last = ts;
 
-            const W = canvas.width;
-            const H = canvas.height;
-            ctx.clearRect(0, 0, W, H);
+                const W = canvas.width;
+                const H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
 
-            for (const p of particles) {
-                // Update position
-                p.wobble += p.wobbleSpeed;
-                p.x += p.speedX + Math.sin(p.wobble) * 0.3;
-                p.y += p.speedY;
+                for (const p of particles) {
+                    // Update position
+                    p.wobble += p.wobbleSpeed;
+                    p.x += p.speedX + Math.sin(p.wobble) * 0.3;
+                    p.y += p.speedY;
 
-                // Reset when particle exits bottom
-                if (p.y > H + 10) {
-                    p.x       = randBetween(0, W);
-                    p.y       = -p.size * 2;
-                    p.size    = randBetween(3, 8);
-                    p.speedY  = randBetween(0.35, 1.1);
-                    p.speedX  = randBetween(-0.25, 0.25);
-                    p.opacity = randBetween(0.30, 0.75);
-                    const isRed = Math.random() > 0.5;
-                    p.r = isRed ? 230 : 255;
-                    p.g = isRed ? 0   : 255;
-                    p.b = isRed ? 18  : 255;
+                    // Reset when particle exits bottom
+                    if (p.y > H + 10) {
+                        p.x = randBetween(0, W);
+                        p.y = -p.size * 2;
+                        p.size = randBetween(3, 8);
+                        p.speedY = randBetween(0.35, 1.1);
+                        p.speedX = randBetween(-0.25, 0.25);
+                        p.opacity = randBetween(0.30, 0.75);
+                        const isRed = Math.random() > 0.5;
+                        p.r = isRed ? 230 : 255;
+                        p.g = isRed ? 0 : 255;
+                        p.b = isRed ? 18 : 255;
+                    }
+
+                    const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+                    grad.addColorStop(0, `rgba(${p.r}, ${p.g}, ${p.b}, ${p.opacity})`);
+                    grad.addColorStop(0.5, `rgba(${p.r}, ${p.g}, ${p.b}, ${p.opacity * 0.5})`);
+                    grad.addColorStop(1, `rgba(${p.r}, ${p.g}, ${p.b}, 0)`);
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Glint
+                    ctx.beginPath();
+                    ctx.arc(p.x - p.size * 0.25, p.y - p.size * 0.25, p.size * 0.3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.5})`;
+                    ctx.fill();
                 }
 
-                const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
-                grad.addColorStop(0,   `rgba(${p.r}, ${p.g}, ${p.b}, ${p.opacity})`);
-                grad.addColorStop(0.5, `rgba(${p.r}, ${p.g}, ${p.b}, ${p.opacity * 0.5})`);
-                grad.addColorStop(1,   `rgba(${p.r}, ${p.g}, ${p.b}, 0)`);
-
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                ctx.fillStyle = grad;
-                ctx.fill();
-
-                // Glint
-                ctx.beginPath();
-                ctx.arc(p.x - p.size * 0.25, p.y - p.size * 0.25, p.size * 0.3, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${p.opacity * 0.5})`;
-                ctx.fill();
+                requestAnimationFrame(draw);
             }
 
             requestAnimationFrame(draw);
-        }
-
-        requestAnimationFrame(draw);
-    })();
+        })();
     </script>
 
 

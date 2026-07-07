@@ -9,7 +9,16 @@
     "start": "node server.js",
     "vercel-build": "echo 'No build step required'"
   },
-  "keywords": ["ecommerce", "beauty", "awka", "paystack"],
+  "keywords": [
+    "ecommerce",
+    "beauty",
+    "awka",
+    "paystack"
+  ],
   "author": "12 Degrees",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^12.15.0",
+    "flutterwave": "^2.2.8"
+  }
 }

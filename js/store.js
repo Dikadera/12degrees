@@ -211,6 +211,8 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Failed to increment views:", e);
         }
 
+        renderCategoryPills();
+
         // Retrieve category from localStorage OR ?cat= URL param (shop.html footer links)
         const urlParams = new URLSearchParams(window.location.search);
         const urlCat = urlParams.get('cat');
@@ -271,11 +273,40 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Check for Paystack redirect reference
+        // Wire up payment method selection click handlers
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        paymentOptions.forEach(opt => {
+            opt.addEventListener('click', () => {
+                paymentOptions.forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                const radio = opt.querySelector('input[type="radio"]');
+                if (radio) {
+                    radio.checked = true;
+                }
+                // Update submit button text
+                const submitBtn = document.getElementById('submit-order-btn');
+                if (submitBtn) {
+                    const gateway = opt.getAttribute('data-gateway');
+                    if (gateway === 'flutterwave') {
+                        submitBtn.innerHTML = 'Pay Securely with Flutterwave';
+                    } else {
+                        submitBtn.innerHTML = 'Pay Securely with Paystack';
+                    }
+                }
+            });
+        });
+
+        // Check for redirect references
         const paystackParams = new URLSearchParams(window.location.search);
         const paystackRef = paystackParams.get('reference');
         if (paystackRef) {
             handlePaystackCallback(paystackRef);
+        }
+
+        const flwTxId = paystackParams.get('transaction_id');
+        const flwStatus = paystackParams.get('status');
+        if (flwTxId && (flwStatus === 'successful' || paystackParams.get('gateway') === 'flutterwave')) {
+            handleFlutterwaveCallback(flwTxId);
         }
 
         // Initialize scroll animations
@@ -486,16 +517,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function renderCategoryPills() {
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        
+        // Homepage featured filters
+        if (featuredCategories) {
+            let html = `<button class="category-btn active" data-cat="all">All</button>`;
+            categories.forEach(c => {
+                html += `<button class="category-btn" data-cat="${c.id}">${c.name}</button>`;
+            });
+            featuredCategories.innerHTML = html;
+        }
+
+        // Shop page main filters
+        if (categoriesContainer) {
+            let html = `<button class="category-btn active" data-category="all">All</button>`;
+            categories.forEach(c => {
+                html += `<button class="category-btn" data-category="${c.id}">${c.name}</button>`;
+            });
+            categoriesContainer.innerHTML = html;
+        }
+    }
+
+    // React to category updates from DB
+    window.addEventListener('db_categories_updated', () => {
+        renderCategoryPills();
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        if (currentCategory !== 'all' && !categories.some(c => c.id === currentCategory)) {
+            currentCategory = 'all';
+            updateShopHero('all');
+        }
+        renderProducts();
+        renderFeaturedProducts();
+    });
+
     // --- Helpers ---
     function formatCategory(cat) {
-        const cats = {
-            'perfumes': 'Perfumes & Mists',
-            'body-lotions': 'Body Lotions',
-            'body-scrubs-oils': 'Scrubs & Oils',
-            'hair-products': 'Hair Products',
-            'intimate-care': 'Intimate Care'
-        };
-        return cats[cat] || cat;
+        if (cat === 'all') return 'All';
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        const found = categories.find(c => c.id === cat);
+        return found ? found.name : cat;
     }
 
     function formatMoney(amount) {
@@ -531,52 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initHeroParallax() {
-        const heroes = [
-            { container: document.getElementById('home'), bg: document.getElementById('hero-carousel'), content: document.querySelector('.hero-inner') },
-            { container: document.getElementById('shop-hero'), bg: document.querySelector('.shop-hero-bg'), content: document.querySelector('.shop-hero-content') }
-        ];
-
-        heroes.forEach(hero => {
-            if (!hero.container) return;
-            
-            if (hero.bg) {
-                hero.bg.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
-            }
-            if (hero.content) {
-                hero.content.style.transition = 'transform 0.25s cubic-bezier(0.25, 1, 0.5, 1)';
-                hero.container.style.perspective = '1000px';
-            }
-
-            hero.container.addEventListener('mousemove', (e) => {
-                const rect = hero.container.getBoundingClientRect();
-                const x = (e.clientX - rect.left) - (rect.width / 2);
-                const y = (e.clientY - rect.top) - (rect.height / 2);
-
-                const bgMoveX = x * -0.035;
-                const bgMoveY = y * -0.035;
-                const contentMoveX = x * 0.02;
-                const contentMoveY = y * 0.02;
-                const contentRotateY = x * 0.01;
-                const contentRotateX = y * -0.01;
-
-                if (hero.bg) {
-                    const isShop = hero.container.id === 'shop-hero';
-                    hero.bg.style.transform = `scale(${isShop ? 1.08 : 1.02}) translate(${bgMoveX}px, ${bgMoveY}px)`;
-                }
-                if (hero.content) {
-                    hero.content.style.transform = `translate3d(${contentMoveX}px, ${contentMoveY}px, 0) rotateX(${contentRotateX}deg) rotateY(${contentRotateY}deg)`;
-                }
-            });
-
-            hero.container.addEventListener('mouseleave', () => {
-                if (hero.bg) {
-                    hero.bg.style.transform = '';
-                }
-                if (hero.content) {
-                    hero.content.style.transform = '';
-                }
-            });
-        });
+        // Disabled at user's request to reduce dynamic/moving elements
     }
 
     function showUIError(msg) {
@@ -612,36 +628,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const subtitle = document.getElementById('shop-hero-subtitle');
         if (!titleEl || !subtitle) return;
 
-        const categoryData = {
-            'all': {
-                title: 'The <em>Storefront</em>',
-                subtitle: "Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs."
-            },
-            'perfumes': {
-                title: 'Perfumes <em>& Mists</em>',
-                subtitle: 'Indulge in our collection of authentic fragrance mists and perfumes. Rich scents that linger all day long.'
-            },
-            'body-lotions': {
-                title: 'Body <em>Lotions</em>',
-                subtitle: 'Deeply hydrate your skin with our premium, skin-loving body lotions and 24-hour moisturizers.'
-            },
-            'body-scrubs-oils': {
-                title: 'Scrubs <em>& Oils</em>',
-                subtitle: 'Polish and nourish your body with sugar scrubs and botanical oils for a glowing, silky-smooth finish.'
-            },
-            'hair-products': {
-                title: 'Hair <em>Products</em>',
-                subtitle: 'Repair, strengthen, and beautify your locks with our curated premium hair care and shampoo collection.'
-            },
-            'intimate-care': {
-                title: 'Intimate <em>Care</em>',
-                subtitle: 'Gentle, pH-balanced washes and soothing care formulated specifically for sensitive skin.'
-            }
-        };
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        const found = categories.find(c => c.id === category);
 
-        const data = categoryData[category] || categoryData['all'];
-        titleEl.innerHTML = data.title;
-        subtitle.textContent = data.subtitle;
+        if (category === 'all') {
+            titleEl.innerHTML = 'The <em>Storefront</em>';
+            subtitle.textContent = "Awka's #1 source for 100% genuine Bath & Body Works, Victoria's Secret, skincare mists, lotions & scrubs.";
+        } else if (found) {
+            titleEl.innerHTML = found.title || found.name;
+            subtitle.textContent = found.subtitle || '';
+        } else {
+            // Capitalize fallback
+            const prettyName = category.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+            titleEl.innerHTML = prettyName;
+            subtitle.textContent = `Shop our collection of authentic ${prettyName} sourced directly from US/UK brands.`;
+        }
     }
 
     // --- Cart Functions ---
@@ -985,7 +986,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const custEmailInput = document.getElementById('cust-email');
 
-    // Checkout Submit (Direct Paystack Payment Flow)
+    // Checkout Submit (Direct Payment Flow - Paystack or Flutterwave)
     checkoutForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -994,11 +995,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const address = document.getElementById('cust-address').value.trim();
         const email = custEmailInput ? custEmailInput.value.trim() : '';
 
+        // Get selected payment gateway
+        const selectedGatewayElement = checkoutForm.querySelector('input[name="payment_gateway"]:checked');
+        const selectedGateway = selectedGatewayElement ? selectedGatewayElement.value : 'paystack';
+
         // Disable submit button during network request
         const submitBtn = document.getElementById('submit-order-btn');
         const originalBtnHTML = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>Redirecting to Paystack...</span>';
+        submitBtn.innerHTML = `<span>Redirecting to ${selectedGateway === 'flutterwave' ? 'Flutterwave' : 'Paystack'}...</span>`;
 
         let totalPrice = 0;
         const orderItems = [];
@@ -1023,12 +1028,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: email,
-                    amount: totalPrice * 100, // Paystack amount is in kobo
+                    amount: totalPrice * 100, // Amount in kobo (divided by 100 on backend for Flutterwave)
+                    gateway: selectedGateway,
                     metadata: {
                         customerName: name,
                         customerPhone: phone,
                         address: address,
-                        paymentMethod: 'Card Payment',
+                        paymentMethod: selectedGateway === 'flutterwave' ? 'Flutterwave Payment' : 'Paystack Payment',
                         items: orderItems,
                         total: totalPrice
                     }
@@ -1038,24 +1044,24 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (result.authorization_url) {
                 // Save order data to localStorage before redirect so we can
-                // retrieve it on return (Paystack metadata format is unreliable)
+                // retrieve it on return
                 localStorage.setItem('pendingOrder', JSON.stringify({
                     customerName: name,
                     customerPhone: phone,
                     customerEmail: email,
                     address: address,
-                    paymentMethod: 'Card Payment',
+                    paymentMethod: selectedGateway === 'flutterwave' ? 'Flutterwave Card/Transfer' : 'Paystack Card/Transfer',
                     items: orderItems,
                     total: totalPrice
                 }));
-                // Redirect to Paystack secure hosted page
+                // Redirect to gateway secure hosted page
                 window.location.href = result.authorization_url;
             } else {
                 throw new Error(result.error || 'Failed to initialize payment');
             }
         } catch (err) {
-            console.error("Paystack initialization failed:", err);
-            alert("Failed to initialize payment gateway: " + err.message);
+            console.error(`${selectedGateway} initialization failed:`, err);
+            alert(`Failed to initialize payment gateway: ` + err.message);
             submitBtn.disabled = false;
             submitBtn.innerHTML = originalBtnHTML;
         }
@@ -1769,6 +1775,185 @@ document.addEventListener('DOMContentLoaded', () => {
             const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
             window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
             alert("Payment verification failed. If your account was charged, please contact us with Paystack reference: " + reference);
+        }
+    }
+
+    // ─── Flutterwave Redirect Verification Callback ─────────────────────────────
+    async function handleFlutterwaveCallback(transactionId) {
+        // Create full-screen loading spinner overlay
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'flutterwave-loading-overlay';
+        loadingDiv.style.cssText = `
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(15,15,17,0.9);
+            color: white; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 100000; font-family: 'Outfit', sans-serif;
+            backdrop-filter: blur(10px);
+        `;
+        loadingDiv.innerHTML = `
+            <div style="width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary, #e60012); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;"></div>
+            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px;">Verifying Payment</h3>
+            <p style="color: var(--text-muted, #888); font-size: 14px;">Please wait while we confirm your Flutterwave transaction status...</p>
+            <style>
+                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            </style>
+        `;
+        document.body.appendChild(loadingDiv);
+
+        try {
+            // Check status via our secure backend API
+            const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
+            const res = await fetch(`${apiBase}/api/verify-payment?transaction_id=${encodeURIComponent(transactionId)}&gateway=flutterwave`);
+            
+            if (!res.ok) {
+                throw new Error(`Server error: ${res.status}`);
+            }
+
+            const paymentDetails = await res.json();
+            console.log('Flutterwave verify response:', JSON.stringify(paymentDetails));
+
+            if (paymentDetails.status === 'success') {
+                // Read original order details from localStorage
+                const pendingOrderRaw = localStorage.getItem('pendingOrder');
+                const orderData = pendingOrderRaw ? JSON.parse(pendingOrderRaw) : (paymentDetails.metadata || {});
+
+                // Clear cart and pendingOrder
+                cart = [];
+                saveCart();
+                updateCartUI();
+                localStorage.removeItem('pendingOrder');
+
+                // Clean URL so refresh doesn't re-trigger verification
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+
+                // Log order to Firebase
+                let orderId = `ORD-${Date.now().toString().slice(-4)}`;
+                try {
+                    const loggedOrder = await window.storeDb.addOrder({
+                        ...orderData,
+                        flutterwaveTransactionId: transactionId,
+                        paymentMethod: 'Flutterwave Card/Transfer',
+                        status: 'paid'
+                    });
+                    orderId = loggedOrder.id;
+                } catch (dbErr) {
+                    console.warn('Firebase order write failed (payment still confirmed):', dbErr.message);
+                }
+
+                // Send EmailJS Thank You Email
+                if (orderData.customerEmail && emailjsPublicKey) {
+                    try {
+                        const orderSummaryHtml = orderData.items.map(item => `
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 12px 0; font-size: 14px; color: #334155;">${item.name}</td>
+                                <td style="padding: 12px 0; text-align: center; font-size: 14px; color: #475569;">x${item.quantity}</td>
+                                <td style="padding: 12px 0; text-align: right; font-size: 14px; font-weight: 600; color: #0f172a;">₦ ${formatMoney(item.price * item.quantity)}</td>
+                            </tr>
+                        `).join('');
+
+                        fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                service_id: emailjsServiceId,
+                                template_id: emailjsTemplateId,
+                                user_id: emailjsPublicKey,
+                                template_params: {
+                                    to_email: orderData.customerEmail,
+                                    to_name: orderData.customerName,
+                                    order_id: orderId,
+                                    customer_phone: orderData.customerPhone,
+                                    delivery_address: orderData.address,
+                                    order_summary_html: orderSummaryHtml,
+                                    total_amount: `₦ ${formatMoney(orderData.total || 0)}`
+                                }
+                            })
+                        }).then(r => {
+                            if (r.ok) {
+                                console.log('✉️ EmailJS thank you email sent successfully via client REST API!');
+                            } else {
+                                r.text().then(txt => console.error('❌ EmailJS REST failed:', txt));
+                            }
+                        }).catch(e => console.error('❌ EmailJS REST network error:', e));
+                    } catch (emailErr) {
+                        console.error('EmailJS payload compile failed:', emailErr);
+                    }
+                }
+
+                // Remove loading overlay
+                loadingDiv.remove();
+
+                // Update success modal receipt contents
+                const successBody = successModal.querySelector('.success-body');
+                if (successBody) {
+                    let itemsHtml = '';
+                    if (orderData.items && orderData.items.length) {
+                        itemsHtml = `
+                            <div style="margin: 16px 0 8px 0; border-top: 1px dashed var(--border); padding-top: 12px; text-align: left;">
+                                <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.5px;">Items Summary</div>
+                                ${orderData.items.map(item => `
+                                    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; line-height: 1.4;">
+                                        <span style="color: var(--ink-2); margin-right: 12px;">${item.name} <strong style="color: var(--text-muted); font-weight: normal; font-size: 11px;">x${item.quantity}</strong></span>
+                                        <strong style="color: var(--ink); white-space: nowrap;">₦ ${formatMoney(item.price * item.quantity)}</strong>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                    }
+
+                    successBody.innerHTML = `
+                        <div class="success-icon-circle" style="background: rgba(40,167,69,0.1); color: #28a745; margin: 0 auto 20px auto; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                        </div>
+                        <h3 class="success-title" style="font-family: var(--fh); font-size: 24px; font-weight: 800; color: var(--ink); margin-bottom: 8px;">Payment Successful! 🎉</h3>
+                        <p class="success-desc" style="font-size: 14px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Thank you for shopping with 12 Degrees. Your order has been placed successfully.</p>
+                        
+                        <div style="background: var(--bg-alt, #f8fafc); border-radius: 12px; padding: 16px; margin: 20px 0; text-align: left; border: 1px solid var(--border, #e2e8f0); font-family: 'DM Sans', sans-serif;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
+                                <span>Order Number:</span>
+                                <strong style="color: var(--ink);">${orderId}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted);">
+                                <span>Transaction Ref:</span>
+                                <strong style="color: var(--ink); font-size: 11px;">FLW-${transactionId.toString().substring(0, 12)}</strong>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; color: var(--text-muted); border-bottom: 1px dashed var(--border, #e2e8f0); padding-bottom: 12px;">
+                                <span>Total Paid:</span>
+                                <strong style="color: var(--primary, #e60012); font-size: 15px;">₦ ${formatMoney(orderData.total || 0)}</strong>
+                            </div>
+                            <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; letter-spacing: 0.5px;">Delivery Details</div>
+                            <div style="font-size: 13px; color: var(--ink); font-weight: 600; margin-bottom: 2px;">${orderData.customerName || 'N/A'} (${orderData.customerPhone || 'N/A'})</div>
+                            <div style="font-size: 13px; color: var(--ink-2); line-height: 1.4;">${orderData.address || 'N/A'}</div>
+                            ${itemsHtml}
+                        </div>
+                        
+                        <button class="btn btn-primary" id="close-success-receipt-btn" style="width: 100%; height: 48px; border-radius: var(--r-md); font-weight: 700; margin-top: 10px;">Continue Shopping</button>
+                    `;
+
+                    const closeBtn = document.getElementById('close-success-receipt-btn');
+                    if (closeBtn) {
+                        closeBtn.addEventListener('click', () => {
+                            successModal.classList.remove('open');
+                        });
+                    }
+                }
+
+                successModal.classList.add('open');
+                triggerConfetti();
+
+            } else {
+                throw new Error("Transaction not successful. Status: " + (paymentDetails.status || 'unknown'));
+            }
+
+        } catch (error) {
+            console.error("Flutterwave payment callback error:", error);
+            loadingDiv.remove();
+            const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+            window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+            alert("Payment verification failed. If your account was charged, please contact us with transaction ID: " + transactionId);
         }
     }
 

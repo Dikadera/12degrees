@@ -3,7 +3,7 @@
    Bold · Clean · Modern DTC Aesthetic
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 /* ─── Tokens ─────────────────────────────────────────────── */
 :root {
@@ -20,6 +20,7 @@
     --ink-2:         #18181b; /* Sleek charcoal */
     --ink-3:         #52525b; /* Slate grey */
     --ink-4:         #a1a1aa;
+    --text-muted:    #6b7280; /* Soft neutral text for secondary copy */
 
     --paper:         #ffffff; /* Crisp white */
     --paper-2:       #f4f4f5; /* Light grey backdrop */
@@ -29,7 +30,7 @@
     --border-dark:   #d4d4d8;
 
     --success:       #10b981;
-    --gold:          #dfb15b;
+    --gold:          var(--brand-gold);
 
     --sh-xs: 0 1px 3px rgba(9,9,11,.03), 0 1px 2px rgba(9,9,11,.01);
     --sh-sm: 0 4px 14px rgba(9,9,11,.05);
@@ -43,8 +44,8 @@
     --r-xl:  28px;
     --r-f:   9999px;
 
-    --fh: 'Syne', sans-serif;
-    --fb: 'DM Sans', sans-serif;
+    --fh: 'Cormorant Garamond', serif;
+    --fb: 'Plus Jakarta Sans', sans-serif;
 
     --ease: cubic-bezier(.4,0,.2,1);
     --spring: cubic-bezier(.34,1.56,.64,1);
@@ -53,15 +54,60 @@
 }
 
 body.dark-mode {
-    --ink:     #f4f4f5;
-    --ink-2:   #18181b;
-    --ink-3:   #a1a1aa;
-    --ink-4:   #71717a;
-    --paper:   #09090b; /* Sleek Jet Black */
-    --paper-2: #18181b; /* Sleek Dark Slate Card */
-    --paper-3: #27272a;
-    --border:  rgba(255,255,255,.08);
+    --ink:         #f4f4f5;
+    --ink-2:       #e4e4e7;
+    --ink-3:       #a1a1aa;
+    --ink-4:       #71717a;
+    --text-muted:  rgba(255,255,255,.72);
+    --paper:       #09090b; /* Sleek Jet Black */
+    --paper-2:     #18181b; /* Sleek Dark Slate Card */
+    --paper-3:     #27272a;
+    --border:      rgba(255,255,255,.08);
     --border-dark: rgba(255,255,255,.14);
+}
+
+body.dark-mode .reviews-section-full {
+    background: #09090f;
+}
+
+body.dark-mode .review-card,
+body.dark-mode .review-form-card,
+body.dark-mode #reviews-avg-badge {
+    background: #111118;
+    border-color: rgba(255,255,255,.12);
+    color: #ffffff;
+}
+
+body.dark-mode .review-card:hover {
+    box-shadow: 0 18px 40px rgba(255,255,255,.05);
+}
+
+body.dark-mode .review-stars {
+    color: #fbbf24;
+}
+
+body.dark-mode .review-comment,
+body.dark-mode .reviewer-product,
+body.dark-mode .review-date,
+body.dark-mode .review-form-card p,
+body.dark-mode .reviewer-name,
+body.dark-mode .section-label .label-text,
+body.dark-mode .shop-title,
+body.dark-mode .shop-title em,
+body.dark-mode #reviews-count-label,
+body.dark-mode #reviews-avg-number {
+    color: #ffffff !important;
+}
+
+body.dark-mode .shop-title,
+body.dark-mode .shop-title em,
+body.dark-mode .section-label .label-text,
+body.dark-mode .section-label {
+    color: #f4f4f5;
+}
+
+body.dark-mode .section-label .label-text {
+    color: rgba(255,255,255,.72);
 }
 
 /* ─── Reset ──────────────────────────────────────────────── */
@@ -861,7 +907,7 @@ body.dark-mode .hero-spotlight-card {
 
 .spotlight-price {
     font-family: var(--fh);
-    font-size: 20px;
+    font-size: 27px;
     font-weight: 800;
     color: var(--brand-plum);
     letter-spacing: -0.5px;
@@ -1285,7 +1331,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
 
 .product-price {
     font-family: var(--fh);
-    font-size: 19px;
+    font-size: 26px;
     font-weight: 800;
     color: var(--red);
     letter-spacing: -.5px;
@@ -1530,7 +1576,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
 
 .cart-item-details { flex-grow: 1; }
 .cart-item-name { font-size: 13.5px; font-weight: 600; margin-bottom: 3px; line-height: 1.4; font-family: var(--fh); }
-.cart-item-price { font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
+.cart-item-price { font-size: 16.5px; font-weight: 700; color: var(--red); margin-bottom: 8px; }
 .cart-item-qty { display: flex; align-items: center; gap: 9px; }
 
 .qty-btn {
@@ -1567,7 +1613,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
     margin-bottom: 16px;
 }
 .cart-total-label { font-size: 14px; font-weight: 500; color: var(--ink-3); }
-.cart-total-val { font-family: var(--fh); font-size: 22px; font-weight: 800; color: var(--red); letter-spacing: -.5px; }
+.cart-total-val { font-family: var(--fh); font-size: 25px; font-weight: 800; color: var(--red); letter-spacing: -.5px; }
 
 .cart-empty {
     text-align: center;
@@ -1649,7 +1695,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
 .quickview-info-side { padding: 36px 32px; display: flex; flex-direction: column; gap: 4px; }
 .quickview-name { font-family: var(--fh); font-size: 21px; font-weight: 700; margin-bottom: 8px; }
 .quickview-rating { display: flex; align-items: center; gap: 6px; margin-bottom: 12px; font-size: 13px; }
-.quickview-price { font-family: var(--fh); font-size: 27px; font-weight: 800; color: var(--red); letter-spacing: -1px; margin-bottom: 14px; }
+.quickview-price { font-family: var(--fh); font-size: 32px; font-weight: 800; color: var(--red); letter-spacing: -1px; margin-bottom: 14px; }
 .quickview-desc { font-size: 14px; color: var(--ink-3); line-height: 1.7; margin-bottom: 16px; }
 .quickview-qty-buy { margin-top: auto; }
 
@@ -2339,6 +2385,20 @@ footer { background: #09090d; }
     line-height: 1.5;
 }
 
+body.dark-mode .review-card,
+body.dark-mode .review-card .reviewer-name,
+body.dark-mode .review-card .reviewer-product,
+body.dark-mode .review-card .review-stars,
+body.dark-mode .review-card .review-comment,
+body.dark-mode .review-card .review-date {
+    color: rgba(255,255,255,.88) !important;
+}
+
+body.dark-mode .review-card {
+    background: #14141f !important;
+    border-color: rgba(255,255,255,.15) !important;
+}
+
 .add-review-form {
     display: flex;
     flex-direction: column;
@@ -2563,4 +2623,85 @@ body.dark-mode .mist-cloud {
 @keyframes mist-drift-3 {
     0% { transform: translate(0, 0) scale(0.85) rotate(0deg); }
     100% { transform: translate(10%, -18%) scale(1.2) rotate(90deg); }
+}
+
+/* ─── Payment Gateway Selector ─── */
+.payment-selector-label {
+    display: block;
+    font-size: 11.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    margin-bottom: 8px;
+    color: var(--ink-2);
+}
+
+.payment-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 22px;
+}
+
+.payment-option {
+    border: 1.5px solid var(--border);
+    border-radius: var(--r-md);
+    padding: 14px 10px;
+    background: var(--paper-2);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--t);
+    position: relative;
+    user-select: none;
+}
+
+.payment-option:hover {
+    border-color: var(--red);
+    background: var(--red-dim);
+}
+
+.payment-option.active {
+    border-color: var(--red);
+    background: var(--red-dim);
+    box-shadow: 0 0 0 3px var(--red-glow);
+}
+
+.payment-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0; height: 0;
+    pointer-events: none;
+}
+
+.payment-option-logo {
+    height: 20px;
+    max-width: 90%;
+    object-fit: contain;
+    filter: grayscale(100%);
+    opacity: 0.55;
+    transition: var(--tf);
+}
+
+.payment-option.active .payment-option-logo,
+.payment-option:hover .payment-option-logo {
+    filter: none;
+    opacity: 1;
+}
+
+.payment-option-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: var(--tf);
+}
+
+.payment-option.active .payment-option-title,
+.payment-option:hover .payment-option-title {
+    color: var(--red);
 }

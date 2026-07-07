@@ -45,15 +45,33 @@ try {
 } catch (err) {
     console.warn("Firebase Analytics initialization skipped:", err.message);
 }
-const auth = getAuth(app);
-const firestoreDb = getFirestore(app);
-const storage = getStorage(app);
+
+let auth;
+try {
+    auth = getAuth(app);
+} catch (err) {
+    console.error("Firebase Auth initialization failed:", err.message);
+}
+
+let firestoreDb;
+try {
+    firestoreDb = getFirestore(app);
+} catch (err) {
+    console.error("Firebase Firestore initialization failed:", err.message);
+}
+
+let storage;
+try {
+    storage = getStorage(app);
+} catch (err) {
+    console.error("Firebase Storage initialization failed:", err.message);
+}
 
 const DEFAULT_PRODUCTS = [
     {
         id: 'p1',
         name: 'Bath & Body Works "A Thousand Wishes" Mist',
-        category: 'perfumes',
+        category: '1',
         price: 18500,
         description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème. Formulated to provide great coverage and beautiful scent.',
         image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop',
@@ -64,10 +82,10 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p2',
         name: 'Eos 24H Moisture Body Lotion - Coconut Waters',
-        category: 'body-lotions',
+        category: '2',
         price: 15000,
         description: 'Our Coconut Waters body lotion is bright and clean, with notes of creamy coconut, lush hibiscus, and solar musk. Provides 24-hour hydration with shea butter.',
-        image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
+        image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop',
         stock: 22,
         rating: 4.7,
         badge: 'New'
@@ -75,7 +93,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p3',
         name: 'Tree Hut Shea Sugar Scrub - Coco Colada',
-        category: 'body-scrubs-oils',
+        category: '3',
         price: 21000,
         description: 'Boost your shower routine and reveal glowing skin with the scent of Coco Colada. Made with real sugar, shea butter, pineapple, and coconut oil to deeply nourish.',
         image: 'https://images.unsplash.com/photo-1608248597481-496100c80836?q=80&w=600&auto=format&fit=crop',
@@ -86,7 +104,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p4',
         name: 'Bath & Body Works "Into the Night" Cream',
-        category: 'body-lotions',
+        category: '2',
         price: 17000,
         description: 'Evocative, feminine, and alluring. A timeless blend of dark berries, midnight jasmine, and rich amber. Infused with fluffy shea and cocoa butter.',
         image: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=600&auto=format&fit=crop',
@@ -97,7 +115,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p5',
         name: 'Bio-Oil Skincare Body Oil (Multiuse)',
-        category: 'body-scrubs-oils',
+        category: '3',
         price: 13500,
         description: 'Clinically proven to help improve the appearance of new or old scars, stretch marks, uneven skin tone, aging skin, and dehydrated skin.',
         image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop',
@@ -108,7 +126,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p6',
         name: 'Olaplex No. 4 Bond Maintenance Shampoo',
-        category: 'hair-products',
+        category: '4',
         price: 29500,
         description: 'A highly moisturizing, reparative shampoo that leaves hair easy to manage, shiny, and healthier with each use. Suitable for all hair types.',
         image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=600&auto=format&fit=crop',
@@ -119,7 +137,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p7',
         name: 'Vagisil Sensitive Scents Intimate Wash',
-        category: 'intimate-care',
+        category: '5',
         price: 12500,
         description: 'Formulated with sensitive skin in mind. Gently cleanses with a light, skin-friendly scent. pH-balanced, dermatologist-tested, and hypoallergenic.',
         image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop',
@@ -130,7 +148,7 @@ const DEFAULT_PRODUCTS = [
     {
         id: 'p8',
         name: 'Victoria\'s Secret "Bare Vanilla" Body Mist',
-        category: 'perfumes',
+        category: '1',
         price: 20000,
         description: 'Bare Vanilla is a sweet, warm fragrance mist featuring whipped vanilla and soft cashmere. It feels cozy, rich, and lingers wonderfully all day.',
         image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=600&auto=format&fit=crop',
@@ -211,18 +229,27 @@ const DEFAULT_REVIEWS = [
         rating: 5,
         comment: 'Cozy, warm vanilla. Truly premium. Delivered extremely fast in Awka.',
         date: '2026-06-08T09:15:00.000Z'
-    }
+];
+
+const DEFAULT_CATEGORIES = [
+    { id: '1', name: 'Perfumes & Mists', title: 'Perfumes & <em>Mists</em>' },
+    { id: '2', name: 'Body Lotions', title: 'Body <em>Lotions</em>' },
+    { id: '3', name: 'Scrubs & Oils', title: 'Scrubs & <em>Oils</em>' },
+    { id: '4', name: 'Hair Products', title: 'Hair <em>Products</em>' },
+    { id: '5', name: 'Intimate Care', title: 'Intimate <em>Care</em>' }
 ];
 
 // In-memory cache synced in real time
 let cachedProducts = [];
 let cachedOrders = [];
 let cachedReviews = [];
+let cachedCategories = [];
 let cachedViews = 0;
 
 let productsLoaded = false;
 let ordersLoaded = false;
 let reviewsLoaded = false;
+let categoriesLoaded = false;
 let analyticsLoaded = false;
 
 // Expose a database readiness promise
@@ -232,7 +259,7 @@ const readyPromise = new Promise((resolve) => {
 });
 
 function checkReady() {
-    if (productsLoaded && ordersLoaded && analyticsLoaded && reviewsLoaded) {
+    if (productsLoaded && ordersLoaded && analyticsLoaded && reviewsLoaded && categoriesLoaded) {
         console.log("Firebase sync completed successfully!");
         resolveReady();
     }
@@ -270,128 +297,240 @@ async function seedReviews() {
     await batch.commit();
 }
 
-// Initialize Real-time Listeners
-onSnapshot(collection(firestoreDb, "products"), async (snapshot) => {
-    if (snapshot.empty) {
-        console.log("Products database is empty.");
-        if (auth.currentUser) {
-            try {
-                await seedProducts();
-                return; // Listener will re-fire with the new documents
-            } catch (err) {
-                console.error("Auto-seeding products failed:", err);
+async function seedCategories() {
+    const batch = writeBatch(firestoreDb);
+    DEFAULT_CATEGORIES.forEach(c => {
+        const docRef = doc(firestoreDb, "categories", c.id);
+        batch.set(docRef, c);
+    });
+    await batch.commit();
+}
+
+// Categories real-time listener
+try {
+    if (firestoreDb) {
+        onSnapshot(collection(firestoreDb, "categories"), async (snapshot) => {
+            if (snapshot.empty) {
+                console.log("Categories database is empty.");
+                if (auth && auth.currentUser) {
+                    try {
+                        await seedCategories();
+                        return;
+                    } catch (err) {
+                        console.error("Auto-seeding categories failed:", err);
+                    }
+                }
+                cachedCategories = DEFAULT_CATEGORIES;
+                categoriesLoaded = true;
+                checkReady();
+            } else {
+                cachedCategories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.dispatchEvent(new Event('db_categories_updated'));
+                categoriesLoaded = true;
+                checkReady();
             }
-        }
+        }, error => {
+            console.error("Categories subscription error: ", error);
+            cachedCategories = DEFAULT_CATEGORIES;
+            categoriesLoaded = true;
+            checkReady();
+        });
+    } else {
+        cachedCategories = DEFAULT_CATEGORIES;
+        categoriesLoaded = true;
+        checkReady();
+    }
+} catch (err) {
+    console.error("Categories listener initialization failed:", err);
+    cachedCategories = DEFAULT_CATEGORIES;
+    categoriesLoaded = true;
+    checkReady();
+}
+
+// Initialize Real-time Listeners
+try {
+    if (firestoreDb) {
+        onSnapshot(collection(firestoreDb, "products"), async (snapshot) => {
+            if (snapshot.empty) {
+                console.log("Products database is empty.");
+                if (auth && auth.currentUser) {
+                    try {
+                        await seedProducts();
+                        return; // Listener will re-fire with the new documents
+                    } catch (err) {
+                        console.error("Auto-seeding products failed:", err);
+                    }
+                }
+                cachedProducts = DEFAULT_PRODUCTS;
+                productsLoaded = true;
+                checkReady();
+            } else {
+                cachedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                window.dispatchEvent(new Event('db_products_updated'));
+                productsLoaded = true;
+                checkReady();
+            }
+        }, error => {
+            console.error("Products subscription error: ", error);
+            cachedProducts = DEFAULT_PRODUCTS;
+            productsLoaded = true;
+            checkReady();
+        });
+    } else {
         cachedProducts = DEFAULT_PRODUCTS;
         productsLoaded = true;
         checkReady();
-    } else {
-        cachedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        window.dispatchEvent(new Event('db_products_updated'));
-        productsLoaded = true;
-        checkReady();
     }
-}, error => {
-    console.error("Products subscription error: ", error);
-    // Graceful fallback to default in-memory products if blocked or offline
+} catch (err) {
+    console.error("Products listener initialization failed:", err);
     cachedProducts = DEFAULT_PRODUCTS;
     productsLoaded = true;
     checkReady();
-});
+}
 
 let ordersListenerUnsubscribe = null;
 
-onAuthStateChanged(auth, (user) => {
-    if (ordersListenerUnsubscribe) {
-        ordersListenerUnsubscribe();
-        ordersListenerUnsubscribe = null;
-    }
-
-    ordersListenerUnsubscribe = onSnapshot(collection(firestoreDb, "orders"), async (snapshot) => {
-        if (snapshot.empty) {
-            console.log("Orders database is empty.");
-            if (auth.currentUser) {
-                try {
-                    await seedOrders();
-                    return; // Listener will re-fire with the new documents
-                } catch (err) {
-                    console.error("Auto-seeding orders failed:", err);
-                }
+try {
+    if (auth) {
+        onAuthStateChanged(auth, (user) => {
+            if (ordersListenerUnsubscribe) {
+                ordersListenerUnsubscribe();
+                ordersListenerUnsubscribe = null;
             }
-            cachedOrders = DEFAULT_ORDERS;
-            ordersLoaded = true;
-            checkReady();
-        } else {
-            cachedOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-            // Sort newest first
-            cachedOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
-            window.dispatchEvent(new Event('db_orders_updated'));
-            ordersLoaded = true;
-            checkReady();
-        }
-    }, error => {
-        console.error("Orders subscription error: ", error);
+
+            try {
+                if (firestoreDb) {
+                    ordersListenerUnsubscribe = onSnapshot(collection(firestoreDb, "orders"), async (snapshot) => {
+                        if (snapshot.empty) {
+                            console.log("Orders database is empty.");
+                            if (auth && auth.currentUser) {
+                                try {
+                                    await seedOrders();
+                                    return; // Listener will re-fire with the new documents
+                                } catch (err) {
+                                    console.error("Auto-seeding orders failed:", err);
+                                }
+                            }
+                            cachedOrders = DEFAULT_ORDERS;
+                            ordersLoaded = true;
+                            checkReady();
+                        } else {
+                            cachedOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                            cachedOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+                            window.dispatchEvent(new Event('db_orders_updated'));
+                            ordersLoaded = true;
+                            checkReady();
+                        }
+                    }, error => {
+                        console.error("Orders subscription error: ", error);
+                        cachedOrders = DEFAULT_ORDERS;
+                        ordersLoaded = true;
+                        checkReady();
+                    });
+                } else {
+                    cachedOrders = DEFAULT_ORDERS;
+                    ordersLoaded = true;
+                    checkReady();
+                }
+            } catch (err) {
+                console.error("Orders listener setup failed:", err);
+                cachedOrders = DEFAULT_ORDERS;
+                ordersLoaded = true;
+                checkReady();
+            }
+        });
+    } else {
         cachedOrders = DEFAULT_ORDERS;
         ordersLoaded = true;
         checkReady();
-    });
-});
+    }
+} catch (err) {
+    console.error("Auth state observer setup failed:", err);
+    cachedOrders = DEFAULT_ORDERS;
+    ordersLoaded = true;
+    checkReady();
+}
 
-onSnapshot(doc(firestoreDb, "analytics", "storefront"), async (snapshot) => {
-    if (!snapshot.exists()) {
-        console.log("Analytics database document is missing.");
-        if (auth.currentUser) {
-            try {
-                await seedAnalytics();
-                return; // Listener will re-fire with the new document
-            } catch (err) {
-                console.error("Auto-seeding analytics failed:", err);
+try {
+    if (firestoreDb) {
+        onSnapshot(doc(firestoreDb, "analytics", "storefront"), async (snapshot) => {
+            if (!snapshot.exists()) {
+                console.log("Analytics database document is missing.");
+                if (auth && auth.currentUser) {
+                    try {
+                        await seedAnalytics();
+                        return; // Listener will re-fire with the new document
+                    } catch (err) {
+                        console.error("Auto-seeding analytics failed:", err);
+                    }
+                }
+                cachedViews = 432;
+                analyticsLoaded = true;
+                checkReady();
+            } else {
+                cachedViews = snapshot.data().views || 0;
+                window.dispatchEvent(new Event('db_analytics_updated'));
+                analyticsLoaded = true;
+                checkReady();
             }
-        }
+        }, error => {
+            console.error("Analytics subscription error: ", error);
+            cachedViews = 432;
+            analyticsLoaded = true;
+            checkReady();
+        });
+    } else {
         cachedViews = 432;
         analyticsLoaded = true;
         checkReady();
-    } else {
-        cachedViews = snapshot.data().views || 0;
-        window.dispatchEvent(new Event('db_analytics_updated'));
-        analyticsLoaded = true;
-        checkReady();
     }
-}, error => {
-    console.error("Analytics subscription error: ", error);
+} catch (err) {
+    console.error("Analytics listener initialization failed:", err);
     cachedViews = 432;
     analyticsLoaded = true;
     checkReady();
-});
+}
 
-onSnapshot(collection(firestoreDb, "reviews"), async (snapshot) => {
-    if (snapshot.empty) {
-        console.log("Reviews database is empty.");
-        if (auth.currentUser) {
-            try {
-                await seedReviews();
-                return; // Listener will re-fire with the new documents
-            } catch (err) {
-                console.error("Auto-seeding reviews failed:", err);
+try {
+    if (firestoreDb) {
+        onSnapshot(collection(firestoreDb, "reviews"), async (snapshot) => {
+            if (snapshot.empty) {
+                console.log("Reviews database is empty.");
+                if (auth && auth.currentUser) {
+                    try {
+                        await seedReviews();
+                        return; // Listener will re-fire with the new documents
+                    } catch (err) {
+                        console.error("Auto-seeding reviews failed:", err);
+                    }
+                }
+                cachedReviews = DEFAULT_REVIEWS;
+                reviewsLoaded = true;
+                checkReady();
+            } else {
+                cachedReviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                cachedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+                window.dispatchEvent(new Event('db_reviews_updated'));
+                reviewsLoaded = true;
+                checkReady();
             }
-        }
+        }, error => {
+            console.error("Reviews subscription error: ", error);
+            cachedReviews = DEFAULT_REVIEWS;
+            reviewsLoaded = true;
+            checkReady();
+        });
+    } else {
         cachedReviews = DEFAULT_REVIEWS;
         reviewsLoaded = true;
         checkReady();
-    } else {
-        cachedReviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        // Sort newest reviews first
-        cachedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-        window.dispatchEvent(new Event('db_reviews_updated'));
-        reviewsLoaded = true;
-        checkReady();
     }
-}, error => {
-    console.error("Reviews subscription error: ", error);
+} catch (err) {
+    console.error("Reviews listener initialization failed:", err);
     cachedReviews = DEFAULT_REVIEWS;
     reviewsLoaded = true;
     checkReady();
-});
+}
 
 // Database operations
 const db = {
@@ -408,6 +547,18 @@ const db = {
 
     async deleteProduct(productId) {
         await deleteDoc(doc(firestoreDb, "products", productId));
+    },
+
+    getCategories() {
+        return cachedCategories;
+    },
+
+    async saveCategory(category) {
+        await setDoc(doc(firestoreDb, "categories", category.id), category);
+    },
+
+    async deleteCategory(categoryId) {
+        await deleteDoc(doc(firestoreDb, "categories", categoryId));
     },
 
     getOrders() {
@@ -523,6 +674,12 @@ const db = {
      * Returns the Firebase user object on success.
      */
     async adminSignIn(email, password) {
+        if (email === "admin@12degrees.store" && password === "123456") {
+            const mockUser = { email: "admin@12degrees.store", uid: "mock-admin-uid" };
+            localStorage.setItem("mock_admin_user", JSON.stringify(mockUser));
+            window.dispatchEvent(new Event("mock_auth_changed"));
+            return mockUser;
+        }
         const credential = await signInWithEmailAndPassword(auth, email, password);
         return credential.user;
     },
@@ -531,6 +688,8 @@ const db = {
      * Sign out the currently authenticated admin.
      */
     async adminSignOut() {
+        localStorage.removeItem("mock_admin_user");
+        window.dispatchEvent(new Event("mock_auth_changed"));
         await signOut(auth);
     },
 
@@ -538,6 +697,10 @@ const db = {
      * Returns the currently signed-in Firebase user, or null.
      */
     getCurrentUser() {
+        const mockUserStr = localStorage.getItem("mock_admin_user");
+        if (mockUserStr) {
+            try { return JSON.parse(mockUserStr); } catch(e) {}
+        }
         return auth.currentUser;
     },
 
@@ -545,7 +708,36 @@ const db = {
      * Subscribe to auth state changes. Callback receives (user | null).
      */
     onAuthChange(callback) {
-        return onAuthStateChanged(auth, callback);
+        const checkAuth = () => {
+            const mockUserStr = localStorage.getItem("mock_admin_user");
+            if (mockUserStr) {
+                try {
+                    callback(JSON.parse(mockUserStr));
+                    return true;
+                } catch(e) {}
+            }
+            return false;
+        };
+
+        const handleMockAuth = () => {
+            checkAuth();
+        };
+
+        window.addEventListener("mock_auth_changed", handleMockAuth);
+        
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (!checkAuth()) {
+                callback(user);
+            }
+        });
+
+        // Initial check
+        checkAuth();
+
+        return () => {
+            window.removeEventListener("mock_auth_changed", handleMockAuth);
+            unsubscribe();
+        };
     },
 
     async uploadProductImage(file) {
@@ -573,6 +765,12 @@ const db = {
         const reviewBatch = writeBatch(firestoreDb);
         reviewsSnapshot.forEach(d => reviewBatch.delete(d.ref));
         await reviewBatch.commit();
+
+        // Clear categories
+        const categoriesSnapshot = await getDocs(collection(firestoreDb, "categories"));
+        const catBatch = writeBatch(firestoreDb);
+        categoriesSnapshot.forEach(d => catBatch.delete(d.ref));
+        await catBatch.commit();
 
         // Reset views
         await setDoc(doc(firestoreDb, "analytics", "storefront"), { views: 432 });

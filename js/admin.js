@@ -7,6 +7,97 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ══════════════════════════════════════════════════════════════════════════
+    // OFFLINE MOCK DATABASE FALLBACK (Failsafe)
+    // ══════════════════════════════════════════════════════════════════════════
+    if (!window.storeDb) {
+        console.warn("⚠️ Firebase (db.js) failed to load. Initializing local offline database fallback...");
+        
+        let localProducts = [
+            { id: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', category: '1', price: 18500, stock: 15, badge: 'In Stock', rating: 4.8, description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop' },
+            { id: 'p2', name: 'Cerave Daily Moisturizing Lotion', category: '2', price: 12000, stock: 20, badge: 'In Stock', rating: 4.7, description: 'Developed with dermatologists, CeraVe Daily Moisturizing Lotion has a unique, lightweight formula that provides 24-hour hydration.', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop' }
+        ];
+        let localOrders = [
+            { id: 'ORD-4321', date: new Date().toISOString(), customerName: 'Dika Dera', customerPhone: '09029819153', customerEmail: 'dika@12degrees.store', total: 30500, status: 'completed', items: [{ productId: 'p1', quantity: 1, price: 18500 }] }
+        ];
+        let localReviews = [
+            { id: 'REV-9876', productId: 'p1', reviewerName: 'Audrey Hepburn', rating: 5, comment: 'Simply stunning mist. The scent lingers beautifully!', date: new Date().toISOString() }
+        ];
+        let localCategories = [
+            { id: '1', name: 'Perfumes & Mists', title: 'Perfumes & Mists' },
+            { id: '2', name: 'Body Lotions', title: 'Body Lotions' },
+            { id: '3', name: 'Scrubs & Oils', title: 'Scrubs & Oils' },
+            { id: '4', name: 'Hair Products', title: 'Hair Products' },
+            { id: '5', name: 'Intimate Care', title: 'Intimate Care' }
+        ];
+        let authCallbacks = [];
+        
+        const mockDb = {
+            ready: Promise.resolve(),
+            getProducts() { return localProducts; },
+            async saveProduct(p) {
+                const idx = localProducts.findIndex(x => x.id === p.id);
+                if (idx > -1) localProducts[idx] = p;
+                else localProducts.push(p);
+                window.dispatchEvent(new Event('db_products_updated'));
+            },
+            async deleteProduct(id) {
+                localProducts = localProducts.filter(x => x.id !== id);
+                window.dispatchEvent(new Event('db_products_updated'));
+            },
+            getOrders() { return localOrders; },
+            async addOrder(o) {
+                localOrders.push(o);
+                window.dispatchEvent(new Event('db_orders_updated'));
+                return o;
+            },
+            async updateOrderStatus(id, status) {
+                const o = localOrders.find(x => x.id === id);
+                if (o) o.status = status;
+                window.dispatchEvent(new Event('db_orders_updated'));
+            },
+            getViews() { return 432; },
+            getReviews() { return localReviews; },
+            getCategories() { return localCategories; },
+            async saveCategory(c) {
+                const idx = localCategories.findIndex(x => x.id === c.id);
+                if (idx > -1) localCategories[idx] = c;
+                else localCategories.push(c);
+                window.dispatchEvent(new Event('db_categories_updated'));
+            },
+            async deleteCategory(id) {
+                localCategories = localCategories.filter(x => x.id !== id);
+                window.dispatchEvent(new Event('db_categories_updated'));
+            },
+            async adminSignIn(email, password) {
+                if (email === 'admin@12degrees.store' && password === '123456') {
+                    const u = { email, uid: 'mock-admin-uid' };
+                    localStorage.setItem('mock_admin_user', JSON.stringify(u));
+                    authCallbacks.forEach(cb => cb(u));
+                    return u;
+                }
+                throw new Error('Invalid credentials');
+            },
+            async adminSignOut() {
+                localStorage.removeItem('mock_admin_user');
+                authCallbacks.forEach(cb => cb(null));
+            },
+            getCurrentUser() {
+                const u = localStorage.getItem('mock_admin_user');
+                return u ? JSON.parse(u) : null;
+            },
+            onAuthChange(callback) {
+                authCallbacks.push(callback);
+                const u = this.getCurrentUser();
+                setTimeout(() => callback(u), 0);
+                return () => {
+                    authCallbacks = authCallbacks.filter(cb => cb !== callback);
+                };
+            }
+        };
+        window.storeDb = mockDb;
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
     // STYLED ALERTS
     // ══════════════════════════════════════════════════════════════════════════
     const alertModal = document.getElementById('alert-modal');
@@ -92,12 +183,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const reviewEditForm      = document.getElementById('review-edit-form');
     const cancelReviewBtn     = document.getElementById('cancel-review-btn');
 
+    // Categories DOM references
+    const categoriesTableBody = document.getElementById('categories-table-body');
+    const categorySearchInput = document.getElementById('category-search-input');
+    const addCategoryModalBtn = document.getElementById('add-category-modal-btn');
+    const categoryModal       = document.getElementById('category-modal');
+    const closeCategoryModalBtn = document.getElementById('close-category-modal-btn');
+    const categoryForm        = document.getElementById('category-form');
+    const categoryModalTitle  = document.getElementById('category-modal-title');
+
     // ── State ─────────────────────────────────────────────────────────────────
     let products             = [];
     let orders               = [];
     let reviews              = [];
     let activeTab            = 'overview';
     let productSearchQuery   = '';
+    let categorySearchQuery  = '';
     let orderSearchQuery     = '';
     let customerSearchQuery  = '';
     let reviewSearchQuery    = '';
@@ -111,6 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabMeta = {
         overview:  { title: 'Analytics Overview',   subtitle: 'Real-time statistics on storefront metrics and order values.' },
         products:  { title: 'Product Inventory',     subtitle: 'Manage catalog items, prices, descriptions, and current stock sizes.' },
+        categories: { title: 'Category Inventory',    subtitle: 'Manage product category classifications, custom hero titles, and subtitles.' },
         orders:    { title: 'Customer Order Logs',   subtitle: 'Monitor checkout items, payment preferences, and shipping deliveries.' },
         customers: { title: 'Customers Directory',   subtitle: 'Consolidated customer information, purchase counts, and spend stats.' },
         reviews:   { title: 'Reviews Moderation',    subtitle: 'Moderate customer ratings and review comments on product catalog items.' },
@@ -219,6 +321,10 @@ document.addEventListener('DOMContentLoaded', () => {
             } else if (dbCheckAttempts >= DB_MAX_WAIT_MS) {
                 clearInterval(t);
                 showLogin('Firebase failed to load. Check your internet connection and try refreshing.');
+                const preloader = document.getElementById('preloader');
+                if (preloader) {
+                    preloader.classList.add('fade-out');
+                }
             }
         }, 50);
     }
@@ -240,18 +346,32 @@ document.addEventListener('DOMContentLoaded', () => {
             hidePreloader();
             return;
         }
+
+        // Safety timeout: if auth state resolution hangs, show login anyway
+        const authTimeout = setTimeout(() => {
+            console.warn("Firebase Auth state resolution timed out. Forcing login screen display.");
+            showLogin();
+            hidePreloader();
+        }, 3500);
+
         // Reactively listen to Firebase Auth state changes
         window.storeDb.onAuthChange(async (user) => {
-            if (user) {
-                hideLogin();
-                if (!dashboardInitialised) {
-                    dashboardInitialised = true;
-                    await initDashboard();
+            clearTimeout(authTimeout);
+            try {
+                if (user) {
+                    hideLogin();
+                    if (!dashboardInitialised) {
+                        dashboardInitialised = true;
+                        await initDashboard();
+                    }
+                } else {
+                    showLogin();
                 }
-            } else {
-                showLogin();
+            } catch (err) {
+                console.error("Dashboard initialization error:", err);
+            } finally {
+                hidePreloader();
             }
-            hidePreloader();
         });
     });
 
@@ -310,7 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // DASHBOARD INITIALISATION
     // ══════════════════════════════════════════════════════════════════════════
     async function initDashboard() {
-        await window.storeDb.ready;
+        try {
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Database load timed out')), 4000)
+            );
+            await Promise.race([window.storeDb.ready, timeoutPromise]);
+        } catch (err) {
+            console.warn("Database ready promise timed out or failed, continuing with initial cached state:", err.message);
+        }
 
         products = window.storeDb.getProducts();
         orders   = window.storeDb.getOrders();
@@ -319,7 +446,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`✅ Dashboard initialized: ${products.length} products, ${orders.length} orders, ${reviews.length} reviews`);
 
         updateMetrics();
+        populateProductCategorySelect();
         renderProductsTable();
+        renderCategoriesTable();
         renderOrdersTable();
         renderCustomersTable();
         renderReviewsTable();
@@ -351,6 +480,13 @@ document.addEventListener('DOMContentLoaded', () => {
             reviews = window.storeDb.getReviews();
             renderReviewsTable();
         });
+
+        window.addEventListener('db_categories_updated', () => {
+            renderCategoriesTable();
+            populateProductCategorySelect();
+            renderProductsTable();
+            updateCharts();
+        });
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -379,9 +515,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     function formatCategory(c) {
-        return { perfumes:'Perfumes & Mists','body-lotions':'Body Lotions',
-                 'body-scrubs-oils':'Scrubs & Oils','hair-products':'Hair Products',
-                 'intimate-care':'Intimate Care' }[c] || c;
+        if (!window.storeDb) return c;
+        const categories = window.storeDb.getCategories();
+        const found = categories.find(cat => cat.id === c);
+        return found ? found.name : c;
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -609,6 +746,165 @@ document.addEventListener('DOMContentLoaded', () => {
 
     closeProductModalBtn.addEventListener('click', () => productModal.classList.remove('open'));
     productModal.addEventListener('click', e => { if (e.target === productModal) productModal.classList.remove('open'); });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // CATEGORIES MANAGEMENT
+    // ══════════════════════════════════════════════════════════════════════════
+    function renderCategoriesTable() {
+        if (!categoriesTableBody) return;
+        categoriesTableBody.innerHTML = '';
+
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        const q = categorySearchQuery.toLowerCase();
+        const list = categories.filter(c =>
+            (c.name || '').toLowerCase().includes(q) ||
+            (c.id || '').toLowerCase().includes(q)
+        );
+
+        if (!list.length) {
+            categoriesTableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--admin-text-muted)">No categories found.</td></tr>`;
+            return;
+        }
+
+        list.forEach(c => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${c.id}</strong></td>
+                <td><strong>${c.name}</strong></td>
+                <td><code>${escapeHtml(c.title || c.name)}</code></td>
+                <td style="text-align:right">
+                    <div class="action-btns" style="justify-content:flex-end">
+                        <button class="action-btn edit-cat" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                        </button>
+                        <button class="action-btn delete-cat" title="Delete" style="color:var(--admin-primary);border-color:rgba(230,0,18,.15)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </td>
+            `;
+
+            row.querySelector('.edit-cat').addEventListener('click', () => openCategoryForm(c.id));
+            row.querySelector('.delete-cat').addEventListener('click', async () => {
+                const isUsed = products.some(p => p.category === c.id);
+                if (isUsed) {
+                    await showAlert(`Cannot delete category "${c.name}". There are products assigned to this category.`, 'Error');
+                    return;
+                }
+                const confirmed = await showAlert(`Are you sure you want to delete category "${c.name}"?`, 'Confirm Delete', true);
+                if (confirmed) {
+                    try {
+                        await window.storeDb.deleteCategory(c.id);
+                        await showAlert('Category deleted successfully!', 'Success');
+                    } catch (err) {
+                        await showAlert('Error deleting category: ' + err.message, 'Error');
+                    }
+                }
+            });
+
+            categoriesTableBody.appendChild(row);
+        });
+    }
+
+    function escapeHtml(text) {
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    if (categorySearchInput) {
+        categorySearchInput.addEventListener('input', e => {
+            categorySearchQuery = e.target.value;
+            renderCategoriesTable();
+        });
+    }
+
+    if (addCategoryModalBtn) addCategoryModalBtn.addEventListener('click', () => openCategoryForm());
+
+    function openCategoryForm(categoryId = null) {
+        categoryForm.reset();
+        document.getElementById('cat-id').value = '';
+        
+        if (categoryId) {
+            const categories = window.storeDb ? window.storeDb.getCategories() : [];
+            const c = categories.find(x => x.id === categoryId);
+            if (!c) return;
+            categoryModalTitle.textContent = 'Edit Category';
+            document.getElementById('form-category-old-id').value = c.id;
+            document.getElementById('cat-id').value = c.id;
+            document.getElementById('cat-name').value = c.name;
+            document.getElementById('cat-title').value = c.title || c.name;
+        } else {
+            categoryModalTitle.textContent = 'Add New Category';
+            document.getElementById('form-category-old-id').value = '';
+        }
+        categoryModal.classList.add('open');
+    }
+
+    closeCategoryModalBtn.addEventListener('click', () => categoryModal.classList.remove('open'));
+    categoryModal.addEventListener('click', e => { if (e.target === categoryModal) categoryModal.classList.remove('open'); });
+
+    categoryForm.addEventListener('submit', async e => {
+        e.preventDefault();
+
+        let id = document.getElementById('cat-id').value.trim();
+        const isNew = !document.getElementById('form-category-old-id').value;
+
+        if (isNew) {
+            const categories = window.storeDb ? window.storeDb.getCategories() : [];
+            let maxId = 0;
+            categories.forEach(c => {
+                const numericId = parseInt(c.id, 10);
+                if (!isNaN(numericId) && numericId > maxId) {
+                    maxId = numericId;
+                }
+            });
+            id = String(maxId + 1);
+        }
+
+        if (!id) {
+            await showAlert('Failed to generate Category ID.', 'Error');
+            return;
+        }
+
+        const name = document.getElementById('cat-name').value.trim();
+        const title = document.getElementById('cat-title').value.trim();
+
+        const btn = categoryForm.querySelector('button[type="submit"]');
+        const orig = btn.innerHTML;
+        btn.disabled = true;
+        btn.textContent = 'Saving category…';
+
+        const obj = { id, name, title };
+
+        try {
+            await window.storeDb.saveCategory(obj);
+            categoryModal.classList.remove('open');
+            await showAlert('Category saved successfully!', 'Success');
+        } catch (err) {
+            console.error(err);
+            await showAlert('Error saving category: ' + err.message, 'Error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = orig;
+        }
+    });
+
+    function populateProductCategorySelect() {
+        const select = document.getElementById('prod-cat');
+        if (!select) return;
+        select.innerHTML = '';
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        categories.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // ORDERS TABLE
@@ -1034,15 +1330,20 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to initialize sales chart:', e);
         }
 
-        const catKeys = ['perfumes','body-lotions','body-scrubs-oils','hair-products','intimate-care'];
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        const catKeys = categories.map(c => c.id);
+        const catLabels = categories.map(c => c.name);
         const categoryData = catKeys.map(k=>products.filter(p=>p.category===k).length);
+
+        const colors = ['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+        const bgColors = catKeys.map((_, i) => colors[i % colors.length]);
 
         try {
             categoryChartInstance = new Chart(categoriesCanvas.getContext('2d'), {
                 type: 'doughnut',
-                data: { labels:['Perfumes','Body Lotions','Scrubs & Oils','Hair Products','Intimate Care'],
+                data: { labels:catLabels,
                         datasets:[{ data:categoryData,
-                                    backgroundColor:['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6'],
+                                    backgroundColor:bgColors,
                                     borderWidth:2, borderColor:'#fff' }] },
                 options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{boxWidth:12,font:{size:11}}}}, cutout:'65%' }
             });
@@ -1068,8 +1369,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const catKeys = ['perfumes','body-lotions','body-scrubs-oils','hair-products','intimate-care'];
-            categoryChartInstance.data.datasets[0].data = catKeys.map(k=>products.filter(p=>p.category===k).length);
+            const categories = window.storeDb ? window.storeDb.getCategories() : [];
+            const catKeys = categories.map(c => c.id);
+            const catLabels = categories.map(c => c.name);
+            const categoryData = catKeys.map(k=>products.filter(p=>p.category===k).length);
+
+            const colors = ['#ef4444','#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316'];
+            const bgColors = catKeys.map((_, i) => colors[i % colors.length]);
+
+            categoryChartInstance.data.labels = catLabels;
+            categoryChartInstance.data.datasets[0].data = categoryData;
+            categoryChartInstance.data.datasets[0].backgroundColor = bgColors;
             categoryChartInstance.update();
             console.log('✅ Categories chart updated');
         } catch (e) {
