@@ -1339,6 +1339,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
     font-weight: 800;
     color: var(--red);
     letter-spacing: -.5px;
+    white-space: nowrap;
 }
 
 .product-rating {

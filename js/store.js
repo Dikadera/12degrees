@@ -270,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-meta">
                     <div style="display:flex; flex-direction:column; gap:2px">
-                        <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
-                        <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
+                        <span class="product-price" style="color:var(--red)">₦${formatMoney(Math.round(product.price * 0.90))}</span>
+                        <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
                     </div>
                     <span class="product-rating">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -487,8 +487,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="product-name">${product.name}</h3>
                     <div class="product-meta">
                         <div style="display:flex; flex-direction:column; gap:2px">
-                            <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
-                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
+                            <span class="product-price" style="color:var(--red)">₦${formatMoney(Math.round(product.price * 0.90))}</span>
+                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
                         </div>
                         <span class="product-rating">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -1374,8 +1374,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         <h3 class="product-name" style="cursor: default;">${recommendedProduct.name}</h3>
                         <div class="product-meta">
                             <div style="display:flex; flex-direction:column; gap:2px">
-                                <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(recommendedProduct.price * 0.90))}</span>
-                                <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(recommendedProduct.price)}</span>
+                                <span class="product-price" style="color:var(--red)">₦${formatMoney(Math.round(recommendedProduct.price * 0.90))}</span>
+                                <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(recommendedProduct.price)}</span>
                             </div>
                             <span class="product-rating">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
