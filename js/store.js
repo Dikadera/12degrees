@@ -68,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentCategory = 'all';
     let searchQuery = '';
     let currentSort = 'default';
+    let currentBadgeFilter = 'all';
 
     // WhatsApp Contact
     const WHATSAPP_PHONE = '2349029819153';
@@ -124,102 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (err) {
             console.warn(`⚠️ DB load failed or timed out: ${err.message}. Loading default fallback products...`);
-            products = [];
-        }
-
-        // If products are empty, populate with local default products so storefront is never blank
-        if (!products || products.length === 0) {
-            console.log('⚠️ Loading default products...');
-            products = [
-                {
-                    id: 'p1',
-                    name: 'Bath & Body Works "A Thousand Wishes" Mist',
-                    category: 'perfumes',
-                    price: 18500,
-                    description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème. Formulated to provide great coverage and beautiful scent.',
-                    image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop',
-                    stock: 15,
-                    rating: 4.8,
-                    badge: 'Best Seller'
-                },
-                {
-                    id: 'p2',
-                    name: 'Eos 24H Moisture Body Lotion - Coconut Waters',
-                    category: 'body-lotions',
-                    price: 15000,
-                    description: 'Our Coconut Waters body lotion is bright and clean, with notes of creamy coconut, lush hibiscus, and solar musk. Provides 24-hour hydration with shea butter.',
-                    image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?q=80&w=600&auto=format&fit=crop',
-                    stock: 22,
-                    rating: 4.7,
-                    badge: 'New'
-                },
-                {
-                    id: 'p3',
-                    name: 'Tree Hut Shea Sugar Scrub - Coco Colada',
-                    category: 'body-scrubs-oils',
-                    price: 21000,
-                    description: 'Boost your shower routine and reveal glowing skin with the scent of Coco Colada. Made with real sugar, shea butter, pineapple, and coconut oil to deeply nourish.',
-                    image: 'https://images.unsplash.com/photo-1608248597481-496100c80836?q=80&w=600&auto=format&fit=crop',
-                    stock: 4,
-                    rating: 4.9,
-                    badge: 'Low Stock'
-                },
-                {
-                    id: 'p4',
-                    name: 'Bath & Body Works "Into the Night" Cream',
-                    category: 'body-lotions',
-                    price: 17000,
-                    description: 'Evocative, feminine, and alluring. A timeless blend of dark berries, midnight jasmine, and rich amber. Infused with fluffy shea and cocoa butter.',
-                    image: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=600&auto=format&fit=crop',
-                    stock: 12,
-                    rating: 4.6,
-                    badge: ''
-                },
-                {
-                    id: 'p5',
-                    name: 'Bio-Oil Skincare Body Oil (Multiuse)',
-                    category: 'body-scrubs-oils',
-                    price: 13500,
-                    description: 'Clinically proven to help improve the appearance of new or old scars, stretch marks, uneven skin tone, aging skin, and dehydrated skin.',
-                    image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?q=80&w=600&auto=format&fit=crop',
-                    stock: 30,
-                    rating: 4.5,
-                    badge: 'Popular'
-                },
-                {
-                    id: 'p6',
-                    name: 'Olaplex No. 4 Bond Maintenance Shampoo',
-                    category: 'hair-products',
-                    price: 29500,
-                    description: 'A highly moisturizing, reparative shampoo that leaves hair easy to manage, shiny, and healthier with each use. Suitable for all hair types.',
-                    image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?q=80&w=600&auto=format&fit=crop',
-                    stock: 8,
-                    rating: 4.8,
-                    badge: ''
-                },
-                {
-                    id: 'p7',
-                    name: 'Vagisil Sensitive Scents Intimate Wash',
-                    category: 'intimate-care',
-                    price: 12500,
-                    description: 'Formulated with sensitive skin in mind. Gently cleanses with a light, skin-friendly scent. pH-balanced, dermatologist-tested, and hypoallergenic.',
-                    image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?q=80&w=600&auto=format&fit=crop',
-                    stock: 14,
-                    rating: 4.4,
-                    badge: ''
-                },
-                {
-                    id: 'p8',
-                    name: 'Victoria\'s Secret "Bare Vanilla" Body Mist',
-                    category: 'perfumes',
-                    price: 20000,
-                    description: 'Bare Vanilla is a sweet, warm fragrance mist featuring whipped vanilla and soft cashmere. It feels cozy, rich, and lingers wonderfully all day.',
-                    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=600&auto=format&fit=crop',
-                    stock: 18,
-                    rating: 4.7,
-                    badge: 'Best Seller'
-                }
-            ];
         }
 
         console.log(`✅ ${products.length} products ready for render`);
@@ -337,102 +242,186 @@ document.addEventListener('DOMContentLoaded', () => {
         initHeroParallax();
     }
 
+    function createProductCard(product) {
+        const card = document.createElement('div');
+        card.className = 'product-card reveal-on-scroll';
+        card.setAttribute('data-id', product.id);
+
+        let badgeHTML = '';
+        if (product.badge) {
+            const badgeClass = product.badge.toLowerCase().replace(' ', '-');
+            badgeHTML = `<span class="product-badge ${badgeClass}">${product.badge}</span>`;
+        }
+
+        const isOutOfStock = product.stock <= 0;
+
+        card.innerHTML = `
+            ${badgeHTML}
+            <div class="product-img-wrapper">
+                <img src="${product.image}" alt="${product.name}" class="product-img" loading="lazy">
+                <div class="product-actions-overlay">
+                    <button class="overlay-btn view-details" title="Quick View">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12c.18.32 2 4 9 4s8.82-3.68 9-4c-.18-.32-2-4-9-4s-8.82 3.68-9 4Z"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="product-info">
+                <span class="product-cat">${formatCategory(product.category)}</span>
+                <h3 class="product-name">${product.name}</h3>
+                <div class="product-meta">
+                    <div style="display:flex; flex-direction:column; gap:2px">
+                        <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
+                        <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
+                    </div>
+                    <span class="product-rating">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        ${(product.rating || 0).toFixed(1)}
+                    </span>
+                </div>
+                <button class="product-footer-btn add-to-cart-btn" ${isOutOfStock ? 'disabled' : ''}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+                    <span>${isOutOfStock ? 'Sold Out' : 'Add to Cart'}</span>
+                </button>
+            </div>
+        `;
+
+        card.querySelector('.product-img-wrapper').addEventListener('click', () => openQuickView(product.id));
+        card.querySelector('.product-name').addEventListener('click', () => openQuickView(product.id));
+        card.querySelector('.view-details').addEventListener('click', (e) => {
+            e.stopPropagation();
+            openQuickView(product.id);
+        });
+
+        const addToCartBtn = card.querySelector('.add-to-cart-btn');
+        addToCartBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            triggerFlyAnimation(card.querySelector('.product-img'), addToCartBtn);
+            addToCart(product.id);
+        });
+
+        return card;
+    }
+
     // --- Render Products ---
     function renderProducts() {
         if (!productGrid) return;
         productGrid.innerHTML = '';
 
-        // Filter products
-        let filtered = products.filter(product => {
-            const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
-            const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                product.category.toLowerCase().includes(searchQuery.toLowerCase());
-            return matchesCategory && matchesSearch;
-        });
+        const isDefaultAllView = currentCategory === 'all' && 
+                                 searchQuery.trim() === '' && 
+                                 currentBadgeFilter === 'all' && 
+                                 currentSort === 'default';
 
-        // Sort products
-        if (currentSort === 'price-low') {
-            filtered.sort((a, b) => a.price - b.price);
-        } else if (currentSort === 'price-high') {
-            filtered.sort((a, b) => b.price - a.price);
-        } else if (currentSort === 'rating') {
-            filtered.sort((a, b) => b.rating - a.rating);
-        }
+        if (isDefaultAllView) {
+            const categories = window.storeDb ? window.storeDb.getCategories() : [];
+            let renderedAny = false;
 
-        if (filtered.length === 0) {
-            productGrid.innerHTML = `
-                <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><circle cx="12" cy="12" r="10"/><path d="m21 21-4.3-4.3"/><path d="M8 14s1.5-2 4-2 4 2 4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
-                    <h3>No products found</h3>
-                    <p>Try refining your search terms or category selection.</p>
-                </div>
-            `;
-            return;
-        }
+            categories.forEach(cat => {
+                const catProducts = products.filter(p => p.category === cat.id);
+                if (catProducts.length > 0) {
+                    renderedAny = true;
 
-        filtered.forEach(product => {
-            const card = document.createElement('div');
-            card.className = 'product-card reveal-on-scroll';
-            card.setAttribute('data-id', product.id);
+                    const sect = document.createElement('div');
+                    sect.className = 'category-section reveal-on-scroll';
+                    sect.style.marginBottom = '48px';
+                    sect.style.width = '100%';
+                    sect.style.gridColumn = '1 / -1';
 
-            // Badges
-            let badgeHTML = '';
-            if (product.badge) {
-                const badgeClass = product.badge.toLowerCase().replace(' ', '-');
-                badgeHTML = `<span class="product-badge ${badgeClass}">${product.badge}</span>`;
+                    sect.innerHTML = `
+                        <div class="section-label" style="margin-bottom: 24px;">
+                            <span class="label-line"></span>
+                            <span class="label-text" style="font-size: 16px; font-weight: 800; color: var(--ink);">${cat.name}</span>
+                        </div>
+                        <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 24px; width: 100%;">
+                        </div>
+                    `;
+
+                    const grid = sect.querySelector('.product-grid');
+                    catProducts.forEach(product => {
+                        const card = createProductCard(product);
+                        grid.appendChild(card);
+                    });
+
+                    productGrid.appendChild(sect);
+                }
+            });
+
+            // Handle uncategorized products
+            const catIds = categories.map(c => c.id);
+            const uncategorizedProducts = products.filter(p => !catIds.includes(p.category));
+            if (uncategorizedProducts.length > 0) {
+                renderedAny = true;
+                const sect = document.createElement('div');
+                sect.className = 'category-section reveal-on-scroll';
+                sect.style.marginBottom = '48px';
+                sect.style.width = '100%';
+                sect.style.gridColumn = '1 / -1';
+
+                sect.innerHTML = `
+                    <div class="section-label" style="margin-bottom: 24px;">
+                        <span class="label-line"></span>
+                        <span class="label-text" style="font-size: 16px; font-weight: 800; color: var(--ink);">Other Products</span>
+                    </div>
+                    <div class="product-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 24px; width: 100%;">
+                    </div>
+                `;
+                const grid = sect.querySelector('.product-grid');
+                uncategorizedProducts.forEach(product => {
+                    const card = createProductCard(product);
+                    grid.appendChild(card);
+                });
+                productGrid.appendChild(sect);
             }
 
-            const isOutOfStock = product.stock <= 0;
-
-            card.innerHTML = `
-                ${badgeHTML}
-                <div class="product-img-wrapper">
-                    <img src="${product.image}" alt="${product.name}" class="product-img" loading="lazy">
-                    <div class="product-actions-overlay">
-                        <button class="overlay-btn view-details" title="Quick View">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12c.18.32 2 4 9 4s8.82-3.68 9-4c-.18-.32-2-4-9-4s-8.82 3.68-9 4Z"/></svg>
-                        </button>
+            if (!renderedAny) {
+                productGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5-2 4-2 4 2 4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
+                        <h3>No products found</h3>
+                        <p>No products exist in the catalog.</p>
                     </div>
-                </div>
-                <div class="product-info">
-                    <span class="product-cat">${formatCategory(product.category)}</span>
-                    <h3 class="product-name">${product.name}</h3>
-                    <div class="product-meta">
-                        <div style="display:flex; flex-direction:column; gap:2px">
-                            <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
-                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
-                        </div>
-                        <span class="product-rating">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                            ${(product.rating || 0).toFixed(1)}
-                        </span>
-                    </div>
-                    <button class="product-footer-btn add-to-cart-btn" ${isOutOfStock ? 'disabled' : ''}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
-                        <span>${isOutOfStock ? 'Sold Out' : 'Add to Cart'}</span>
-                    </button>
-                </div>
-            `;
-
-            // Event Listeners on Card Elements
-            card.querySelector('.product-img-wrapper').addEventListener('click', () => openQuickView(product.id));
-            card.querySelector('.product-name').addEventListener('click', () => openQuickView(product.id));
-            card.querySelector('.view-details').addEventListener('click', (e) => {
-                e.stopPropagation();
-                openQuickView(product.id);
+                `;
+            } else {
+                initScrollReveal();
+            }
+        } else {
+            // Filter products
+            let filtered = products.filter(product => {
+                const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+                const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    product.category.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesBadge = currentBadgeFilter === 'all' ||
+                    (product.badge && product.badge.toLowerCase() === currentBadgeFilter.toLowerCase());
+                return matchesCategory && matchesSearch && matchesBadge;
             });
 
-            const addToCartBtn = card.querySelector('.add-to-cart-btn');
-            addToCartBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                triggerFlyAnimation(card.querySelector('.product-img'), addToCartBtn);
-                addToCart(product.id);
-            });
+            // Sort products
+            if (currentSort === 'price-low') {
+                filtered.sort((a, b) => a.price - b.price);
+            } else if (currentSort === 'price-high') {
+                filtered.sort((a, b) => b.price - a.price);
+            } else if (currentSort === 'rating') {
+                filtered.sort((a, b) => b.rating - a.rating);
+            }
 
-            productGrid.appendChild(card);
-        });
-        initScrollReveal();
+            if (filtered.length === 0) {
+                productGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px; opacity:0.5;"><circle cx="12" cy="12" r="10"/><path d="m21 21-4.3-4.3"/><path d="M8 14s1.5-2 4-2 4 2 4 2"/><line x1="9" x2="9.01" y1="9" y2="9"/><line x1="15" x2="15.01" y1="9" y2="9"/></svg>
+                        <h3>No products found</h3>
+                        <p>Try refining your search terms or category selection.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(product => {
+                const card = createProductCard(product);
+                productGrid.appendChild(card);
+            });
+            initScrollReveal();
+        }
     }
 
     // --- Featured Products (Homepage teaser — top-rated, filterable by category pill) ---
@@ -450,11 +439,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeBtn) activeCat = activeBtn.getAttribute('data-cat') || 'all';
         }
 
-        // Filter by category and show top 8 by rating
-        let featured = products
-            .filter(p => activeCat === 'all' || p.category === activeCat)
-            .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-            .slice(0, 8);
+        // Filter by showInFeatured flag (marked by admin) and category, slice max 9
+        let featured = products.filter(p => p.showInFeatured === true && (activeCat === 'all' || p.category === activeCat));
+        
+        // Fallback to top-rated if admin hasn't marked any products yet
+        if (featured.length === 0) {
+            featured = products
+                .filter(p => activeCat === 'all' || p.category === activeCat)
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        }
+
+        featured = featured.slice(0, 9);
 
         featuredGrid.innerHTML = '';
 
@@ -1208,6 +1203,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sortSelect) {
         sortSelect.addEventListener('change', (e) => {
             currentSort = e.target.value;
+            renderProducts();
+        });
+    }
+
+    // Badge filtering
+    const badgeFilterSelect = document.getElementById('badge-filter-select');
+    if (badgeFilterSelect) {
+        badgeFilterSelect.addEventListener('change', (e) => {
+            currentBadgeFilter = e.target.value;
             renderProducts();
         });
     }

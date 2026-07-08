@@ -229,6 +229,7 @@ const DEFAULT_REVIEWS = [
         rating: 5,
         comment: 'Cozy, warm vanilla. Truly premium. Delivered extremely fast in Awka.',
         date: '2026-06-08T09:15:00.000Z'
+    }
 ];
 
 const DEFAULT_CATEGORIES = [

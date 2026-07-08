@@ -2877,3 +2877,29 @@ body.dark-mode .mist-cloud {
     color: var(--red);
     background: var(--red-dim);
 }
+
+.menu-drawer-socials {
+    margin-top: auto;
+    padding: 32px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+}
+.menu-drawer-socials a {
+    width: 42px;
+    height: 42px;
+    border-radius: var(--r-f);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-3);
+    background: var(--paper-2);
+    transition: var(--tf);
+}
+.menu-drawer-socials a:hover {
+    color: var(--red);
+    border-color: var(--red);
+    background: var(--red-dim);
+}

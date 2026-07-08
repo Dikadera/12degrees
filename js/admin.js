@@ -611,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('prod-desc').value        = p.description;
             document.getElementById('prod-stock').value       = p.stock;
             document.getElementById('prod-badge').value       = p.badge || '';
+            document.getElementById('prod-show-featured').checked = p.showInFeatured || false;
             prodImgInput.value = p.image;
             formImgPreview.src = p.image;
             formImgPreview.style.display = 'block';
@@ -716,6 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
             description: document.getElementById('prod-desc').value.trim(),
             stock:       parseInt(document.getElementById('prod-stock').value),
             badge:       document.getElementById('prod-badge').value,
+            showInFeatured: document.getElementById('prod-show-featured').checked,
             image:       imageUrl,
             rating:      id ? (products.find(p => p.id === id)?.rating || 4.5) : 4.5
         };
