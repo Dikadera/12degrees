@@ -122,6 +122,14 @@
                     </svg>
                     <span class="cart-count" id="cart-count-badge">0</span>
                 </button>
+                <button class="menu-toggle" id="menu-toggle-btn" aria-label="Toggle Navigation Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="4" x2="20" y1="12" y2="12"></line>
+                        <line x1="4" x2="20" y1="6" y2="6"></line>
+                        <line x1="4" x2="20" y1="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
         </div>
     </header>
@@ -522,6 +530,26 @@
         </div>
     </section>
 
+    <!-- Mobile Navigation Drawer -->
+    <div class="drawer-overlay" id="menu-drawer-overlay"></div>
+    <div class="menu-drawer" id="menu-drawer">
+        <div class="menu-drawer-header">
+            <h3>Menu</h3>
+            <button class="close-btn" id="close-menu-btn" aria-label="Close Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        <div class="menu-drawer-links">
+            <a href="index.html#home" class="menu-drawer-link">Home</a>
+            <a href="shop.html" class="menu-drawer-link">Shop</a>
+            <a href="index.html#features" class="menu-drawer-link">Why Us</a>
+            <a href="index.html#about" class="menu-drawer-link">Find Us</a>
+        </div>
+    </div>
+
     <!-- Cart Drawer -->
     <div class="drawer-overlay" id="cart-drawer-overlay"></div>
     <div class="cart-drawer" id="cart-drawer">
@@ -761,16 +789,61 @@
             // ─── Header Scroll Behavior ───
             const siteHeader = document.getElementById('site-header');
             if (siteHeader) {
+                let lastScrollY = window.scrollY;
                 const handleScroll = () => {
-                    if (window.scrollY > 20) {
+                    const currentScrollY = window.scrollY;
+                    
+                    // Add scrolled styling
+                    if (currentScrollY > 20) {
                         siteHeader.classList.add('scrolled');
                     } else {
                         siteHeader.classList.remove('scrolled');
                     }
+                    
+                    // Auto-hide when scrolling down, show when scrolling up
+                    if (currentScrollY > lastScrollY && currentScrollY > 150) {
+                        siteHeader.classList.add('header-hidden');
+                    } else {
+                        siteHeader.classList.remove('header-hidden');
+                    }
+                    
+                    lastScrollY = currentScrollY;
                 };
                 window.addEventListener('scroll', handleScroll, { passive: true });
                 handleScroll(); // Initial check
             }
+
+            // ─── Mobile Menu Drawer Behavior ───
+            const menuToggleBtn = document.getElementById('menu-toggle-btn');
+            const closeMenuBtn = document.getElementById('close-menu-btn');
+            const menuDrawer = document.getElementById('menu-drawer');
+            const menuDrawerOverlay = document.getElementById('menu-drawer-overlay');
+            const menuDrawerLinks = document.querySelectorAll('.menu-drawer-link');
+
+            const openMenu = () => {
+                menuDrawer.classList.add('open');
+                menuDrawerOverlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            };
+
+            const closeMenu = () => {
+                menuDrawer.classList.remove('open');
+                menuDrawerOverlay.classList.remove('open');
+                document.body.style.overflow = '';
+            };
+
+            if (menuToggleBtn && menuDrawer && menuDrawerOverlay) {
+                menuToggleBtn.addEventListener('click', openMenu);
+            }
+            if (closeMenuBtn) {
+                closeMenuBtn.addEventListener('click', closeMenu);
+            }
+            if (menuDrawerOverlay) {
+                menuDrawerOverlay.addEventListener('click', closeMenu);
+            }
+            menuDrawerLinks.forEach(link => {
+                link.addEventListener('click', closeMenu);
+            });
 
             // ─── Background Carousel Auto-Slide ───
             const carousel = document.getElementById('hero-carousel');

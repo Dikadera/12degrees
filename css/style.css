@@ -185,7 +185,11 @@ body.dark-mode .ticker-bar .ticker-dot {
     left: 0;
     right: 0;
     z-index: 100;
-    transition: background .4s ease, border-color .4s ease, backdrop-filter .4s ease, top .4s ease;
+    transition: background .4s ease, border-color .4s ease, backdrop-filter .4s ease, top .4s ease, transform .3s ease;
+}
+
+#site-header.header-hidden {
+    transform: translateY(-160px);
 }
 
 /* Scrolled state — added by JS */
@@ -1420,7 +1424,7 @@ body.dark-mode .category-btn.active { background: var(--red); border-color: var(
 }
 
 .feature-card {
-    background: var(--ink-2);
+    background: #18181b;
     padding: 40px 32px;
     border-radius: var(--r-lg);
     border: 1px solid rgba(255,255,255,.05);
@@ -2801,4 +2805,75 @@ body.dark-mode .mist-cloud {
         font-size: 11.5px;
         text-align: center;
     }
+}
+
+/* ─── Mobile Navigation Drawer ─── */
+.menu-toggle {
+    display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+    .menu-toggle {
+        width: 40px; height: 40px;
+        border-radius: var(--r-f);
+        border: 1.5px solid var(--border);
+        background: var(--paper-2);
+        color: var(--ink-3);
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        transition: var(--tf);
+        position: relative;
+    }
+    .menu-toggle:hover {
+        border-color: var(--red);
+        color: var(--red);
+        background: var(--red-dim);
+    }
+    #site-header:not(.scrolled) .menu-toggle {
+        border-color: rgba(255,255,255,0.3);
+        background: rgba(255,255,255,0.1);
+        color: rgba(255,255,255,0.9);
+    }
+}
+
+.menu-drawer {
+    position: fixed;
+    top: 0; left: -320px;
+    width: 100%; max-width: 320px;
+    height: 100%;
+    background: var(--paper);
+    box-shadow: 12px 0 40px rgba(0,0,0,.14);
+    z-index: 200;
+    transition: left .38s var(--ease);
+    display: flex; flex-direction: column;
+}
+.menu-drawer.open { left: 0; }
+
+.menu-drawer-header {
+    padding: 22px 22px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.menu-drawer-header h3 { font-family: var(--fh); font-size: 18px; font-weight: 700; }
+
+.menu-drawer-links {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.menu-drawer-link {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink-2);
+    padding: 10px 16px;
+    border-radius: var(--r-md);
+    transition: var(--tf);
+}
+.menu-drawer-link:hover {
+    color: var(--red);
+    background: var(--red-dim);
 }
