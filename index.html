@@ -162,6 +162,10 @@
 
         <!-- Overlay Content -->
         <div class="hero-inner">
+            <div class="hero-promo-badge">
+                <span class="promo-pill">LAUNCH SPECIAL</span>
+                <span class="promo-text">10% discount on every purchase to celebrate our new website!</span>
+            </div>
             <div class="hero-eyebrow">
                 <span class="hero-dot"></span>
                 <span>Awka's Premier Beauty Oasis</span>
@@ -534,6 +538,14 @@
         <div class="cart-footer">
             <div class="cart-summary-row">
                 <span class="cart-total-label">Subtotal</span>
+                <span id="cart-subtotal-price" style="font-weight: 500; font-size: 15px;">₦ 0</span>
+            </div>
+            <div class="cart-summary-row" id="cart-discount-row" style="display:none; color: var(--brand-teal);">
+                <span class="cart-total-label" style="color: var(--brand-teal);">10% Launch Discount</span>
+                <span id="cart-discount-val" style="font-weight: 600; font-size: 15px;">-₦ 0</span>
+            </div>
+            <div class="cart-summary-row" style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px;">
+                <span class="cart-total-label" style="font-weight: 700;">Grand Total</span>
                 <span class="cart-total-val" id="cart-total-price">₦ 0</span>
             </div>
             <button class="btn btn-primary" id="checkout-btn" style="width: 100%; height: 50px;" disabled>Proceed to
@@ -611,7 +623,15 @@
                             <span>Total Items</span>
                             <span id="checkout-items-qty">0</span>
                         </div>
-                        <div class="order-summary-row total-row">
+                        <div class="order-summary-row" id="checkout-subtotal-row" style="margin-top: 6px;">
+                            <span>Subtotal</span>
+                            <span id="checkout-subtotal-val">₦ 0</span>
+                        </div>
+                        <div class="order-summary-row" id="checkout-discount-row" style="margin-top: 6px; color: var(--brand-teal); font-weight: 600;">
+                            <span>10% Launch Discount</span>
+                            <span id="checkout-discount-val">-₦ 0</span>
+                        </div>
+                        <div class="order-summary-row total-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
                             <span>Order Total</span>
                             <span id="checkout-total-val" style="color: var(--primary);">₦ 0</span>
                         </div>

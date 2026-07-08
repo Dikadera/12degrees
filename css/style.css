@@ -1887,7 +1887,7 @@ footer { background: #09090d; }
 }
 
 @media (max-width: 900px) {
-    .hero-inner { grid-template-columns: 1fr; gap: 48px; padding: 60px 24px; text-align: center; }
+    .hero-inner { grid-template-columns: 1fr; gap: 48px; padding: 160px 24px 60px; text-align: center; }
     .hero-left { align-items: center; }
     .hero-headline { letter-spacing: -2px; }
     .hero-sub { margin-left: auto; margin-right: auto; }
@@ -1914,7 +1914,7 @@ footer { background: #09090d; }
 
 @media (max-width: 520px) {
     .container { padding: 0 20px; }
-    .hero-inner { padding: 48px 20px; }
+    .hero-inner { padding: 150px 20px 48px; }
     .hero-stats { gap: 18px; }
     .hero-cta-row { flex-direction: column; align-items: flex-start; width: 100%; }
     .cta-primary, .cta-ghost { width: 100%; justify-content: center; }
@@ -2167,7 +2167,7 @@ footer { background: #09090d; }
     .hero-inner {
         grid-template-columns: 1fr 1fr;
         gap: 32px;
-        padding: 70px 24px;
+        padding: 150px 24px 70px;
     }
     .hero-spotlight-card {
         max-width: 320px;
@@ -2182,7 +2182,7 @@ footer { background: #09090d; }
     }
     .hero-inner {
         grid-template-columns: 1fr;
-        padding: 60px 20px 90px;
+        padding: 160px 20px 90px;
         gap: 36px;
     }
     .hero-right {
@@ -2209,7 +2209,7 @@ footer { background: #09090d; }
 /* Mobile */
 @media (max-width: 640px) {
     .hero-inner {
-        padding: 36px 16px 80px;
+        padding: 140px 16px 80px;
         gap: 24px;
     }
     .hero-spotlight-card {
@@ -2253,7 +2253,7 @@ footer { background: #09090d; }
 /* Small phones */
 @media (max-width: 420px) {
     .hero-inner {
-        padding: 28px 14px 72px;
+        padding: 130px 14px 72px;
     }
     .hero-right {
         display: none; /* hide card on very small screens */
@@ -2704,4 +2704,101 @@ body.dark-mode .mist-cloud {
 .payment-option.active .payment-option-title,
 .payment-option:hover .payment-option-title {
     color: var(--red);
+}
+
+/* Promo Banner / Badge */
+.hero-promo-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(230, 0, 18, 0.12);
+    border: 1px solid rgba(230, 0, 18, 0.3);
+    padding: 8px 16px;
+    border-radius: 100px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    animation: pulseGlow 3s infinite;
+}
+
+.hero-promo-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 215, 0, 0.25) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: skewX(-25deg);
+    animation: goldSweep 4s infinite ease-in-out;
+}
+
+@keyframes goldSweep {
+    0% { left: -150%; }
+    30% { left: 150%; }
+    100% { left: 150%; }
+}
+
+.promo-pill {
+    background: var(--red);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 4px 8px;
+    border-radius: 100px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.promo-text {
+    color: white;
+    font-size: 13.5px;
+    font-weight: 500;
+    line-height: 1.2;
+    position: relative;
+    z-index: 2;
+    transition: opacity 0.3s ease;
+}
+
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(230, 0, 18, 0.2);
+        border-color: rgba(230, 0, 18, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 15px 4px rgba(230, 0, 18, 0.4);
+        border-color: rgba(230, 0, 18, 0.7);
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-promo-badge {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 6px;
+        border-radius: 16px;
+        padding: 10px 16px;
+        width: 100%;
+        max-width: 340px;
+        box-sizing: border-box;
+    }
+    .promo-pill {
+        align-self: center;
+        font-size: 9px;
+    }
+    .promo-text {
+        font-size: 11.5px;
+        text-align: center;
+    }
 }

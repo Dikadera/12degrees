@@ -2,6 +2,27 @@
 document.addEventListener('DOMContentLoaded', () => {
     console.log('📦 Store.js: DOMContentLoaded fired');
 
+    // Rotate promo notification texts dynamically
+    const promoTexts = [
+        "10% discount on every purchase to celebrate our new website!",
+        "✨ Grand Opening Launch: Discount auto-applied at checkout!",
+        "🚚 Free delivery in Awka on orders above ₦30,000!"
+    ];
+    let currentPromoIdx = 0;
+    const promoTextElements = document.querySelectorAll('.promo-text');
+    if (promoTextElements.length > 0) {
+        setInterval(() => {
+            currentPromoIdx = (currentPromoIdx + 1) % promoTexts.length;
+            promoTextElements.forEach(el => {
+                el.style.opacity = 0;
+                setTimeout(() => {
+                    el.textContent = promoTexts[currentPromoIdx];
+                    el.style.opacity = 1;
+                }, 300);
+            });
+        }, 4000);
+    }
+
     // Select elements
     const productGrid = document.getElementById('product-grid');
     const featuredGrid = document.getElementById('featured-grid');
@@ -9,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoriesContainer = document.getElementById('categories-container');
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
-    
+
     // Cart elements
     const cartToggleBtn = document.getElementById('cart-toggle-btn');
     const closeCartBtn = document.getElementById('close-cart-btn');
@@ -25,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const quickviewModal = document.getElementById('quickview-modal');
     const closeQuickviewBtn = document.getElementById('close-quickview-btn');
     const quickviewContent = document.getElementById('quickview-body-content');
-    
+
     const checkoutModal = document.getElementById('checkout-modal');
     const closeCheckoutBtn = document.getElementById('close-checkout-btn');
     const checkoutForm = document.getElementById('checkout-form');
     const checkoutItemsQty = document.getElementById('checkout-items-qty');
     const checkoutTotalVal = document.getElementById('checkout-total-val');
-    
+
     const successModal = document.getElementById('success-modal');
     const closeSuccessBtn = document.getElementById('close-success-btn');
     const successWaRedirectBtn = document.getElementById('success-wa-redirect-btn');
@@ -66,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 emailjsServiceId = configData.emailjsServiceId;
                 emailjsTemplateId = configData.emailjsTemplateId;
                 console.log('🔑 EmailJS credentials loaded from backend config');
-                
+
                 if (typeof emailjs !== 'undefined' && emailjsPublicKey) {
                     emailjs.init(emailjsPublicKey);
                     console.log('✉️ EmailJS SDK initialized');
@@ -80,20 +101,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Store
     async function initStore() {
         console.log('📦 initStore() starting...');
-        
+
         // Fetch configurations in background (non-blocking)
         fetchConfig();
 
         try {
             if (window.storeDb) {
                 console.log('✅ storeDb found, waiting for ready...');
-                
+
                 // Race the database ready promise against a 3.5-second timeout
                 // This prevents the page from remaining blank if Firestore is blocked by adblockers/privacy settings
-                const timeoutPromise = new Promise((_, reject) => 
+                const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('Database load timed out')), 3500)
                 );
-                
+
                 await Promise.race([window.storeDb.ready, timeoutPromise]);
                 products = window.storeDb.getProducts();
                 console.log(`📊 Got ${products.length} products from DB`);
@@ -325,8 +346,8 @@ document.addEventListener('DOMContentLoaded', () => {
         let filtered = products.filter(product => {
             const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
             const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                                  product.category.toLowerCase().includes(searchQuery.toLowerCase());
+                product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                product.category.toLowerCase().includes(searchQuery.toLowerCase());
             return matchesCategory && matchesSearch;
         });
 
@@ -378,7 +399,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="product-cat">${formatCategory(product.category)}</span>
                     <h3 class="product-name">${product.name}</h3>
                     <div class="product-meta">
-                        <span class="product-price">₦ ${formatMoney(product.price)}</span>
+                        <div style="display:flex; flex-direction:column; gap:2px">
+                            <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
+                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
+                        </div>
                         <span class="product-rating">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             ${(product.rating || 0).toFixed(1)}
@@ -467,7 +491,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span class="product-cat">${formatCategory(product.category)}</span>
                     <h3 class="product-name">${product.name}</h3>
                     <div class="product-meta">
-                        <span class="product-price">₦ ${formatMoney(product.price)}</span>
+                        <div style="display:flex; flex-direction:column; gap:2px">
+                            <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(product.price * 0.90))}</span>
+                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(product.price)}</span>
+                        </div>
                         <span class="product-rating">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                             ${(product.rating || 0).toFixed(1)}
@@ -519,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderCategoryPills() {
         const categories = window.storeDb ? window.storeDb.getCategories() : [];
-        
+
         // Homepage featured filters
         if (featuredCategories) {
             let html = `<button class="category-btn active" data-cat="all">All</button>`;
@@ -710,7 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateCartUI() {
         cartItemsContainer.innerHTML = '';
-        
+
         let totalItems = 0;
         let totalPrice = 0;
 
@@ -759,7 +786,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update counts
         cartCountBadge.innerText = totalItems;
         cartQtyCount.innerText = totalItems;
-        cartTotalPrice.innerText = `₦ ${formatMoney(totalPrice)}`;
+
+        const cartSubtotalPrice = document.getElementById('cart-subtotal-price');
+        const cartDiscountRow = document.getElementById('cart-discount-row');
+        const cartDiscountVal = document.getElementById('cart-discount-val');
+
+        const discount = totalPrice * 0.10;
+        const grandTotal = totalPrice - discount;
+
+        if (cartSubtotalPrice) cartSubtotalPrice.innerText = `₦ ${formatMoney(totalPrice)}`;
+        if (cartDiscountRow) {
+            if (totalPrice > 0) {
+                cartDiscountRow.style.display = 'flex';
+                cartDiscountVal.innerText = `-₦ ${formatMoney(discount)}`;
+            } else {
+                cartDiscountRow.style.display = 'none';
+            }
+        }
+        cartTotalPrice.innerText = `₦ ${formatMoney(grandTotal)}`;
 
         // Trigger header cart button bounce
         if (totalItems > 0) {
@@ -774,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const imgClone = imgElement.cloneNode(true);
         imgClone.classList.add('flying-item');
-        
+
         // Starting position
         const rect = imgElement.getBoundingClientRect();
         imgClone.style.top = `${rect.top}px`;
@@ -786,7 +830,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Ending position (Cart button in header)
         const cartRect = cartToggleBtn.getBoundingClientRect();
-        
+
         // Force reflow
         imgClone.offsetWidth;
 
@@ -979,8 +1023,16 @@ document.addEventListener('DOMContentLoaded', () => {
             totalPrice += item.price * item.quantity;
         });
 
+        const discount = totalPrice * 0.10;
+        const grandTotal = totalPrice - discount;
+
+        const subtotalValEl = document.getElementById('checkout-subtotal-val');
+        const discountValEl = document.getElementById('checkout-discount-val');
+
         if (checkoutItemsQty) checkoutItemsQty.innerText = totalItems;
-        if (checkoutTotalVal) checkoutTotalVal.innerText = `₦ ${formatMoney(totalPrice)}`;
+        if (subtotalValEl) subtotalValEl.innerText = `₦ ${formatMoney(totalPrice)}`;
+        if (discountValEl) discountValEl.innerText = `-₦ ${formatMoney(discount)}`;
+        if (checkoutTotalVal) checkoutTotalVal.innerText = `₦ ${formatMoney(grandTotal)}`;
         checkoutModal.classList.add('open');
     }
 
@@ -1011,7 +1063,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cart.forEach((item) => {
             const itemTotal = item.price * item.quantity;
             totalPrice += itemTotal;
-            
+
             orderItems.push({
                 productId: item.productId,
                 name: item.name,
@@ -1019,6 +1071,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 quantity: item.quantity
             });
         });
+
+        const discount = totalPrice * 0.10;
+        const grandTotal = totalPrice - discount;
 
         try {
             // Request transaction initialization from our secure backend API
@@ -1028,7 +1083,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     email: email,
-                    amount: totalPrice * 100, // Amount in kobo (divided by 100 on backend for Flutterwave)
+                    amount: grandTotal * 100, // Amount in kobo (divided by 100 on backend for Flutterwave)
                     gateway: selectedGateway,
                     metadata: {
                         customerName: name,
@@ -1036,7 +1091,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         address: address,
                         paymentMethod: selectedGateway === 'flutterwave' ? 'Flutterwave Payment' : 'Paystack Payment',
                         items: orderItems,
-                        total: totalPrice
+                        total: grandTotal
                     }
                 })
             });
@@ -1052,7 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     address: address,
                     paymentMethod: selectedGateway === 'flutterwave' ? 'Flutterwave Card/Transfer' : 'Paystack Card/Transfer',
                     items: orderItems,
-                    total: totalPrice
+                    total: grandTotal
                 }));
                 // Redirect to gateway secure hosted page
                 window.location.href = result.authorization_url;
@@ -1158,7 +1213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Handle footer link category clicking
-    window.filterByCategory = function(categoryKey) {
+    window.filterByCategory = function (categoryKey) {
         if (categoriesContainer) {
             const targetBtn = categoriesContainer.querySelector(`.category-btn[data-category="${categoryKey}"]`);
             if (targetBtn) {
@@ -1205,7 +1260,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function initQuiz() {
         const startBtn = document.getElementById('start-quiz-btn');
         const restartBtn = document.getElementById('restart-quiz-btn');
-        
+
         if (startBtn) {
             startBtn.addEventListener('click', startQuiz);
         }
@@ -1220,11 +1275,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const intro = document.getElementById('quiz-intro');
         const results = document.getElementById('quiz-results');
         const container = document.getElementById('quiz-question-container');
-        
+
         if (intro) intro.style.display = 'none';
         if (results) results.style.display = 'none';
         if (container) container.style.display = 'block';
-        
+
         showQuizQuestion();
     }
 
@@ -1238,22 +1293,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const stepCount = document.getElementById('quiz-step-count');
         const qText = document.getElementById('quiz-question-text');
         const optionsGrid = document.getElementById('quiz-options-grid');
-        
+
         if (!currentQ || !progressFill || !stepCount || !qText || !optionsGrid) return;
 
         // Progress
         const progressPct = (quizStep / quizQuestions.length) * 100;
         progressFill.style.width = `${progressPct}%`;
-        
+
         // Step count
         stepCount.innerText = `Question ${quizStep + 1} of ${quizQuestions.length}`;
-        
+
         // Question Text
         qText.innerText = currentQ.question;
-        
+
         // Options
         optionsGrid.innerHTML = '';
-        
+
         currentQ.options.forEach(opt => {
             const btn = document.createElement('button');
             btn.className = 'quiz-option-btn';
@@ -1269,7 +1324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleQuizSelect(val) {
         quizAnswers.push(val);
         quizStep++;
-        
+
         if (quizStep < quizQuestions.length) {
             showQuizQuestion();
         } else {
@@ -1282,17 +1337,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressFill = document.getElementById('quiz-progress-fill');
         const matchCardContainer = document.getElementById('quiz-recommendation-card');
         const resultsDiv = document.getElementById('quiz-results');
-        
+
         if (container) container.style.display = 'none';
         if (progressFill) progressFill.style.width = '100%';
         if (!matchCardContainer || !resultsDiv) return;
-        
+
         // Match recommendation
         const val1 = quizAnswers[0];
         const val3 = quizAnswers[2];
-        
+
         let matchedId = 'p1'; // Default: A Thousand Wishes
-        
+
         if (val3 === 'berries' || val1 === 'sweet') {
             matchedId = products.some(p => p.id === 'p1' && p.stock > 0) ? 'p1' : 'p4';
         } else if (val3 === 'coconut' || val1 === 'fresh') {
@@ -1300,9 +1355,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (val3 === 'vanilla' || val1 === 'cozy') {
             matchedId = products.some(p => p.id === 'p8' && p.stock > 0) ? 'p8' : 'p2';
         }
-        
+
         const recommendedProduct = products.find(p => p.id === matchedId) || products[0];
-        
+
         if (recommendedProduct) {
             const isOutOfStock = recommendedProduct.stock <= 0;
             matchCardContainer.innerHTML = `
@@ -1314,7 +1369,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="product-cat">${formatCategory(recommendedProduct.category)}</span>
                         <h3 class="product-name" style="cursor: default;">${recommendedProduct.name}</h3>
                         <div class="product-meta">
-                            <span class="product-price">₦ ${formatMoney(recommendedProduct.price)}</span>
+                            <div style="display:flex; flex-direction:column; gap:2px">
+                                <span class="product-price" style="color:var(--red)">₦ ${formatMoney(Math.round(recommendedProduct.price * 0.90))}</span>
+                                <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦ ${formatMoney(recommendedProduct.price)}</span>
+                            </div>
                             <span class="product-rating">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                                 ${(recommendedProduct.rating || 0).toFixed(1)}
@@ -1327,7 +1385,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>
             `;
-            
+
             const quizAddBtn = matchCardContainer.querySelector('.quiz-add-to-cart-btn');
             quizAddBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1335,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addToCart(recommendedProduct.id);
             });
         }
-        
+
         resultsDiv.style.display = 'flex';
     }
 
@@ -1345,7 +1403,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const avgNumberEl = document.getElementById('reviews-avg-number');
         const avgStarsEl = document.getElementById('reviews-avg-stars');
         const countLabelEl = document.getElementById('reviews-count-label');
-        
+
         if (!reviewsGrid) return; // Only run on pages with the reviews grid
 
         function renderReviews() {
@@ -1362,7 +1420,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     { id: 'REV-1003', productId: 'p8', productName: 'Victoria\'s Secret "Bare Vanilla" Body Mist', userName: 'Kenechukwu Ndu', rating: 5, comment: 'Cozy, warm vanilla. Truly premium. Delivered extremely fast in Awka.', date: '2026-06-08T09:15:00.000Z' }
                 ];
             }
-            
+
             // Sort reviews by date descending (newest first)
             allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -1370,7 +1428,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (allReviews.length > 0) {
                 const totalRating = allReviews.reduce((sum, r) => sum + Number(r.rating), 0);
                 const avgRating = Math.round((totalRating / allReviews.length) * 10) / 10;
-                
+
                 if (avgNumberEl) avgNumberEl.textContent = avgRating.toFixed(1);
                 if (avgStarsEl) {
                     const fullStars = Math.round(avgRating);
@@ -1397,7 +1455,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const nameInit = r.userName ? r.userName.charAt(0).toUpperCase() : '?';
                 const formattedDate = new Date(r.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
                 const starsText = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-                
+
                 return `
                     <div class="review-card">
                         <div class="review-card-header">
@@ -1440,7 +1498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Review form submit handling
-        
+
         if (reviewForm) {
             reviewForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -1448,7 +1506,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const productInput = document.getElementById('rev-product');
                 const commentInput = document.getElementById('rev-comment');
                 const submitBtn = document.getElementById('submit-review-btn');
-                
+
                 const userName = nameInput.value.trim();
                 const productName = productInput.value.trim();
                 const rating = parseInt(revRatingInput.value, 10);
@@ -1624,7 +1682,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check status via our secure backend API
             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
             const res = await fetch(`${apiBase}/api/verify-payment?reference=${encodeURIComponent(reference)}`);
-            
+
             if (!res.ok) {
                 throw new Error(`Server error: ${res.status}`);
             }
@@ -1806,7 +1864,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Check status via our secure backend API
             const apiBase = (window.location.port === '5500' || window.location.port === '5501') ? 'http://localhost:8080' : '';
             const res = await fetch(`${apiBase}/api/verify-payment?transaction_id=${encodeURIComponent(transactionId)}&gateway=flutterwave`);
-            
+
             if (!res.ok) {
                 throw new Error(`Server error: ${res.status}`);
             }
