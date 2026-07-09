@@ -45,10 +45,16 @@
         </div>
     </div>
     <script>
-        window.addEventListener('load', () => {
+        const hidePreloader = () => {
             const preloader = document.getElementById('preloader');
-            if (preloader) preloader.classList.add('fade-out');
-        });
+            if (preloader && !preloader.classList.contains('fade-out')) {
+                preloader.classList.add('fade-out');
+                setTimeout(() => preloader.style.display = 'none', 600);
+            }
+        };
+        window.addEventListener('DOMContentLoaded', hidePreloader);
+        window.addEventListener('load', hidePreloader);
+        setTimeout(hidePreloader, 1800); // 1.8s fallback to prevent stuck loader
     </script>
 
     <!-- Local file protocol warning banner -->

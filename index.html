@@ -12,6 +12,62 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         rel="stylesheet">
+    <!-- Preload first hero image to prevent blank screen flash -->
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop">
+
+    <style>
+        /* Inline critical CSS for preloader to prevent white screen delay */
+        .preloader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #ffffff;
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+        .preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .preloader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .preloader-logo {
+            height: 75px;
+            width: auto;
+            object-fit: contain;
+            animation: preloader-pulse 1.8s infinite ease-in-out;
+        }
+        .preloader-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            border-top-color: #e60012;
+            animation: preloader-spin 1s linear infinite;
+        }
+        @keyframes preloader-spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes preloader-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        @media (prefers-color-scheme: dark) {
+            .preloader { background-color: #09090b !important; }
+            .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+        }
+        body.dark-mode .preloader { background-color: #09090b !important; }
+        body.dark-mode .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+    </style>
+
     <link rel="stylesheet" href="css/style.css?v=1.2">
     <link rel="icon" type="image/png" href="images/logo.png">
 
@@ -46,10 +102,31 @@
         </div>
     </div>
     <script>
-        window.addEventListener('load', () => {
+        const hidePreloader = () => {
             const preloader = document.getElementById('preloader');
-            if (preloader) preloader.classList.add('fade-out');
-        });
+            if (preloader && !preloader.classList.contains('fade-out')) {
+                preloader.classList.add('fade-out');
+                setTimeout(() => preloader.style.display = 'none', 600);
+            }
+        };
+
+        // Track critical hero image load so screen is never blank when loader fades
+        const heroImg = new Image();
+        heroImg.src = "https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop";
+        
+        let loaded = false;
+        const onAssetLoad = () => {
+            if (loaded) return;
+            loaded = true;
+            hidePreloader();
+        };
+
+        heroImg.onload = onAssetLoad;
+        heroImg.onerror = onAssetLoad; // hide even if image fails
+        window.addEventListener('load', onAssetLoad);
+        
+        // Fallback: maximum 2.8s wait
+        setTimeout(onAssetLoad, 2800);
     </script>
 
     <!-- Local file protocol warning banner -->
@@ -178,7 +255,7 @@
             </div>
             <h1 class="hero-headline" id="hero-headline">
                 <span class="hero-line-1">PREMIUM</span>
-                <span class="hero-line-2">Bath<em>,</em>Body<em>&</em> Hair</span>
+                <span class="hero-line-2">Bath<span class="hero-comma">,</span> Body <em>&</em> Hair</span>
                 <span class="hero-line-3"> Essentials.</span>
             </h1>
             <div class="hero-pamper-glow-repeat">
