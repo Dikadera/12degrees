@@ -1049,3 +1049,70 @@ tbody tr:hover {
     0%, 100% { transform: scale(1); opacity: 0.85; }
     50% { transform: scale(1.08); opacity: 1; }
 }
+
+/* --- Premium Custom Alert Modal --- */
+#alert-modal .modal-content {
+    border-top: 4px solid var(--admin-primary);
+    text-align: center;
+    padding: 28px 24px;
+    border-radius: var(--radius-lg);
+    background: var(--admin-surface);
+}
+
+#alert-modal .modal-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--admin-text);
+}
+
+#alert-modal #alert-message {
+    font-size: 14px;
+    color: var(--admin-text-muted) !important;
+    line-height: 1.5;
+    margin-bottom: 24px !important;
+}
+
+#alert-modal .alert-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+#alert-modal button {
+    padding: 10px 20px;
+    font-size: 13.5px;
+    font-weight: 600;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+#alert-modal #alert-confirm-btn {
+    background-color: var(--admin-primary);
+    color: white;
+    border: none;
+}
+#alert-modal #alert-confirm-btn:hover {
+    background-color: var(--admin-primary-hover);
+}
+
+#alert-modal #alert-cancel-btn {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+#alert-modal #alert-cancel-btn:hover {
+    background-color: #e2e8f0;
+}
+
+/* Destructive / Warning Alert Variant */
+#alert-modal.delete-warning .modal-content {
+    border-top-color: #ef4444;
+}
+#alert-modal.delete-warning #alert-confirm-btn {
+    background-color: #ef4444;
+}
+#alert-modal.delete-warning #alert-confirm-btn:hover {
+    background-color: #dc2626;
+}

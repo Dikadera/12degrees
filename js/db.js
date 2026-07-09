@@ -539,27 +539,105 @@ const db = {
     auth: auth,
 
     getProducts() {
-        return cachedProducts;
+        const localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+        const merged = [...cachedProducts];
+        localProducts.forEach(localProd => {
+            const idx = merged.findIndex(p => p.id === localProd.id);
+            if (idx > -1) {
+                merged[idx] = localProd;
+            } else {
+                merged.push(localProd);
+            }
+        });
+        return merged;
     },
 
     async saveProduct(product) {
-        await setDoc(doc(firestoreDb, "products", product.id), product);
+        try {
+            await setDoc(doc(firestoreDb, "products", product.id), product);
+        } catch (err) {
+            if (err.code === 'permission-denied' || err.message.includes('permission')) {
+                console.warn("Storing product locally (Firestore write denied):", err.message);
+                const localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+                const idx = localProducts.findIndex(p => p.id === product.id);
+                if (idx > -1) {
+                    localProducts[idx] = product;
+                } else {
+                    localProducts.push(product);
+                }
+                localStorage.setItem('12degrees_local_products', JSON.stringify(localProducts));
+                window.dispatchEvent(new Event('db_products_updated'));
+            } else {
+                throw err;
+            }
+        }
     },
 
     async deleteProduct(productId) {
-        await deleteDoc(doc(firestoreDb, "products", productId));
+        try {
+            await deleteDoc(doc(firestoreDb, "products", productId));
+        } catch (err) {
+            if (err.code === 'permission-denied' || err.message.includes('permission')) {
+                console.warn("Deleting product locally (Firestore write denied):", err.message);
+                let localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+                localProducts = localProducts.filter(p => p.id !== productId);
+                localStorage.setItem('12degrees_local_products', JSON.stringify(localProducts));
+                window.dispatchEvent(new Event('db_products_updated'));
+            } else {
+                throw err;
+            }
+        }
     },
 
     getCategories() {
-        return cachedCategories;
+        const localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+        const merged = [...cachedCategories];
+        localCategories.forEach(localCat => {
+            const idx = merged.findIndex(c => c.id === localCat.id);
+            if (idx > -1) {
+                merged[idx] = localCat;
+            } else {
+                merged.push(localCat);
+            }
+        });
+        return merged;
     },
 
     async saveCategory(category) {
-        await setDoc(doc(firestoreDb, "categories", category.id), category);
+        try {
+            await setDoc(doc(firestoreDb, "categories", category.id), category);
+        } catch (err) {
+            if (err.code === 'permission-denied' || err.message.includes('permission')) {
+                console.warn("Storing category locally (Firestore write denied):", err.message);
+                const localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+                const idx = localCategories.findIndex(c => c.id === category.id);
+                if (idx > -1) {
+                    localCategories[idx] = category;
+                } else {
+                    localCategories.push(category);
+                }
+                localStorage.setItem('12degrees_local_categories', JSON.stringify(localCategories));
+                window.dispatchEvent(new Event('db_categories_updated'));
+            } else {
+                throw err;
+            }
+        }
     },
 
     async deleteCategory(categoryId) {
-        await deleteDoc(doc(firestoreDb, "categories", categoryId));
+        try {
+            await deleteDoc(doc(firestoreDb, "categories", categoryId));
+        } catch (err) {
+            if (err.code === 'permission-denied' || err.message.includes('permission')) {
+                console.warn("Deleting category locally (Firestore write denied):", err.message);
+                let localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+                localCategories = localCategories.filter(c => c.id !== categoryId);
+                localStorage.setItem('12degrees_local_categories', JSON.stringify(localCategories));
+                window.dispatchEvent(new Event('db_categories_updated'));
+            } else {
+                throw err;
+            }
+        }
     },
 
     getOrders() {

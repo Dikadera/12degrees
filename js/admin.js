@@ -111,14 +111,31 @@ document.addEventListener('DOMContentLoaded', () => {
             alertTitle.textContent = title;
             alertMessage.textContent = message;
             alertCancelBtn.style.display = isConfirm ? 'block' : 'none';
+            
+            // Toggle red color/styling warning style for delete actions
+            if (title.toLowerCase().includes('delete') || title.toLowerCase().includes('warning')) {
+                alertModal.classList.add('delete-warning');
+            } else {
+                alertModal.classList.remove('delete-warning');
+            }
+            
             alertModal.style.display = 'flex';
+            // Trigger reflow
+            alertModal.offsetHeight;
+            alertModal.classList.add('open');
 
             alertConfirmBtn.onclick = () => {
-                alertModal.style.display = 'none';
+                alertModal.classList.remove('open');
+                setTimeout(() => {
+                    alertModal.style.display = 'none';
+                }, 300);
                 resolve(true);
             };
             alertCancelBtn.onclick = () => {
-                alertModal.style.display = 'none';
+                alertModal.classList.remove('open');
+                setTimeout(() => {
+                    alertModal.style.display = 'none';
+                }, 300);
                 resolve(false);
             };
         });
