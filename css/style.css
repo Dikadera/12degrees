@@ -688,16 +688,16 @@ body.dark-mode .hero-overlay {
 .hero-pamper-glow-repeat {
     display: inline-flex;
     align-items: center;
-    gap: 16px;
-    margin: 12px 0 24px;
+    gap: 10px;
+    margin: 10px 0 20px;
     font-family: var(--fb);
-    font-size: clamp(12px, 1.8vw, 15px);
+    font-size: clamp(9px, 1.1vw, 10.5px);
     font-weight: 700;
-    letter-spacing: 4px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: rgba(255, 255, 255, 0.8);
     background: rgba(255, 255, 255, 0.04);
-    padding: 8px 24px;
+    padding: 5px 14px;
     border-radius: var(--r-f);
     border: 1px solid rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(8px);
