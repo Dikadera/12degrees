@@ -178,9 +178,16 @@
             </div>
             <h1 class="hero-headline" id="hero-headline">
                 <span class="hero-line-1">PREMIUM</span>
-                <span class="hero-line-2">Bath <em>&</em> Body</span>
-                <span class="hero-line-3">Delivered.</span>
+                <span class="hero-line-2">Bath<em>&</em> Body<em>,</em> Hair</span>
+                <span class="hero-line-3"> Essentials.</span>
             </h1>
+            <div class="hero-pamper-glow-repeat">
+                <span class="step step-pamper">pamper</span>
+                <span class="step-arrow">&rarr;</span>
+                <span class="step step-glow">glow</span>
+                <span class="step-arrow">&rarr;</span>
+                <span class="step step-repeat">repeat</span>
+            </div>
             <p class="hero-sub" id="hero-sub">Mists &middot; Moisturizers &middot; Scrubs &middot; Hair Care &middot;
                 Intimate Care. 100% authentic brands, shipped right to your door in Awka &amp; nationwide.</p>
 
@@ -263,7 +270,7 @@
                         <span class="label-text">Interactive Finder</span>
                     </div>
                     <h2 class="quiz-title">Find Your <em>Signature Scent</em></h2>
-                    <p class="quiz-desc">Take our 30-second quiz to discover the perfect Bath & Body Works scent,
+                    <p class="quiz-desc">Take our 30-second quiz to discover the perfect Bath & Body Works, scent,
                         lotion, or mist tailored to your unique vibe.</p>
                     <button class="btn btn-primary" id="start-quiz-btn">Start Scent Finder</button>
                 </div>
@@ -548,19 +555,22 @@
         </div>
         <div class="menu-drawer-socials">
             <a href="https://instagram.com/the12degreestores" target="_blank" aria-label="Instagram">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
                     <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                     <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
                 </svg>
             </a>
             <a href="https://facebook.com/the12degreestores" target="_blank" aria-label="Facebook">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
                     <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>
             </a>
             <a href="https://tiktok.com/@the12degreestores" target="_blank" aria-label="TikTok">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
                     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                 </svg>
             </a>
@@ -589,7 +599,8 @@
                 <span class="cart-total-label" style="color: var(--brand-teal);">10% Launch Discount</span>
                 <span id="cart-discount-val" style="font-weight: 600; font-size: 15px;">-₦ 0</span>
             </div>
-            <div class="cart-summary-row" style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px;">
+            <div class="cart-summary-row"
+                style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px;">
                 <span class="cart-total-label" style="font-weight: 700;">Grand Total</span>
                 <span class="cart-total-val" id="cart-total-price">₦ 0</span>
             </div>
@@ -672,11 +683,13 @@
                             <span>Subtotal</span>
                             <span id="checkout-subtotal-val">₦ 0</span>
                         </div>
-                        <div class="order-summary-row" id="checkout-discount-row" style="margin-top: 6px; color: var(--brand-teal); font-weight: 600;">
+                        <div class="order-summary-row" id="checkout-discount-row"
+                            style="margin-top: 6px; color: var(--brand-teal); font-weight: 600;">
                             <span>10% Launch Discount</span>
                             <span id="checkout-discount-val">-₦ 0</span>
                         </div>
-                        <div class="order-summary-row total-row" style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
+                        <div class="order-summary-row total-row"
+                            style="margin-top: 10px; border-top: 1px solid var(--border); padding-top: 10px;">
                             <span>Order Total</span>
                             <span id="checkout-total-val" style="color: var(--primary);">₦ 0</span>
                         </div>
@@ -809,21 +822,21 @@
                 let lastScrollY = window.scrollY;
                 const handleScroll = () => {
                     const currentScrollY = window.scrollY;
-                    
+
                     // Add scrolled styling
                     if (currentScrollY > 20) {
                         siteHeader.classList.add('scrolled');
                     } else {
                         siteHeader.classList.remove('scrolled');
                     }
-                    
+
                     // Auto-hide when scrolling down, show when scrolling up
                     if (currentScrollY > lastScrollY && currentScrollY > 150) {
                         siteHeader.classList.add('header-hidden');
                     } else {
                         siteHeader.classList.remove('header-hidden');
                     }
-                    
+
                     lastScrollY = currentScrollY;
                 };
                 window.addEventListener('scroll', handleScroll, { passive: true });
@@ -915,7 +928,7 @@
         });
     </script>
 
-        })();
+    })();
     </script>
 
 

@@ -685,6 +685,66 @@ body.dark-mode .hero-overlay {
     to { transform: translateY(0); opacity: 1; }
 }
 
+.hero-pamper-glow-repeat {
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    margin: 12px 0 24px;
+    font-family: var(--fb);
+    font-size: clamp(12px, 1.8vw, 15px);
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.04);
+    padding: 8px 24px;
+    border-radius: var(--r-f);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0;
+    animation: reveal-text 0.8s cubic-bezier(.16,1,.3,1) 0.45s forwards;
+}
+
+.hero-pamper-glow-repeat span.step {
+    display: inline-block;
+    transition: var(--t);
+    position: relative;
+}
+
+.hero-pamper-glow-repeat span.step-pamper {
+    animation: word-glow-1 6s infinite;
+}
+
+.hero-pamper-glow-repeat span.step-glow {
+    animation: word-glow-2 6s infinite;
+}
+
+.hero-pamper-glow-repeat span.step-repeat {
+    animation: word-glow-3 6s infinite;
+}
+
+.hero-pamper-glow-repeat span.step-arrow {
+    color: rgba(255, 255, 255, 0.25);
+    font-weight: 300;
+    transition: color 0.5s ease;
+}
+
+@keyframes word-glow-1 {
+    0%, 100%, 33.33% { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.6); transform: scale(1.05); }
+    33.34%, 99.99% { color: rgba(255,255,255,0.4); text-shadow: none; transform: scale(1); }
+}
+
+@keyframes word-glow-2 {
+    0%, 33.33%, 100% { color: rgba(255,255,255,0.4); text-shadow: none; transform: scale(1); }
+    33.34%, 66.66% { color: var(--brand-gold); text-shadow: 0 0 12px rgba(223,177,91,0.6); transform: scale(1.05); }
+}
+
+@keyframes word-glow-3 {
+    0%, 66.66%, 100% { color: rgba(255,255,255,0.4); text-shadow: none; transform: scale(1); }
+    66.67%, 99.99% { color: var(--red); text-shadow: 0 0 12px rgba(230,0,18,0.6); transform: scale(1.05); }
+}
+
 .hero-sub {
     font-size: 15.5px;
     color: rgba(255,255,255,0.82);
@@ -1199,6 +1259,7 @@ body.dark-mode .spotlight-btn:hover {
     white-space: nowrap;
     cursor: pointer;
     transition: var(--tf);
+    flex-shrink: 0;
 }
 .category-btn:hover { border-color: var(--red); color: var(--red); }
 .category-btn.active {
@@ -2805,6 +2866,25 @@ body.dark-mode .mist-cloud {
     .promo-text {
         font-size: 11.5px;
         text-align: center;
+    }
+    .category-scroll {
+        padding: 8px 32px 12px;
+        margin-left: -32px;
+        margin-right: -32px;
+        scroll-padding: 0 32px;
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .category-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    .category-btn {
+        padding: 10px 20px;
+        font-size: 13px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
     }
 }
 
