@@ -781,14 +781,33 @@ const db = {
      * Returns the Firebase user object on success.
      */
     async adminSignIn(email, password) {
+        // Enforce Firebase Auth when online
+        if (!isOffline && auth) {
+            try {
+                const credential = await signInWithEmailAndPassword(auth, email, password);
+                localStorage.removeItem("mock_admin_user");
+                return credential.user;
+            } catch (err) {
+                // Sane fallback if they are using local development but protocol is not file://
+                if (email === "admin@12degrees.store" && password === "123456") {
+                    console.warn("Firebase sign-in failed. Falling back to local mock session.");
+                    const mockUser = { email: "admin@12degrees.store", uid: "mock-admin-uid" };
+                    localStorage.setItem("mock_admin_user", JSON.stringify(mockUser));
+                    window.dispatchEvent(new Event("mock_auth_changed"));
+                    return mockUser;
+                }
+                throw err;
+            }
+        }
+
+        // Offline / file protocol fallback
         if (email === "admin@12degrees.store" && password === "123456") {
             const mockUser = { email: "admin@12degrees.store", uid: "mock-admin-uid" };
             localStorage.setItem("mock_admin_user", JSON.stringify(mockUser));
             window.dispatchEvent(new Event("mock_auth_changed"));
             return mockUser;
         }
-        const credential = await signInWithEmailAndPassword(auth, email, password);
-        return credential.user;
+        throw new Error("Sign-in failed. Please verify your internet connection or admin credentials.");
     },
 
     /**
@@ -797,18 +816,20 @@ const db = {
     async adminSignOut() {
         localStorage.removeItem("mock_admin_user");
         window.dispatchEvent(new Event("mock_auth_changed"));
-        await signOut(auth);
+        if (auth) await signOut(auth);
     },
 
     /**
      * Returns the currently signed-in Firebase user, or null.
      */
     getCurrentUser() {
-        const mockUserStr = localStorage.getItem("mock_admin_user");
-        if (mockUserStr) {
-            try { return JSON.parse(mockUserStr); } catch(e) {}
+        if (isOffline) {
+            const mockUserStr = localStorage.getItem("mock_admin_user");
+            if (mockUserStr) {
+                try { return JSON.parse(mockUserStr); } catch(e) {}
+            }
         }
-        return auth.currentUser;
+        return auth ? auth.currentUser : null;
     },
 
     /**
@@ -816,12 +837,14 @@ const db = {
      */
     onAuthChange(callback) {
         const checkAuth = () => {
-            const mockUserStr = localStorage.getItem("mock_admin_user");
-            if (mockUserStr) {
-                try {
-                    callback(JSON.parse(mockUserStr));
-                    return true;
-                } catch(e) {}
+            if (isOffline) {
+                const mockUserStr = localStorage.getItem("mock_admin_user");
+                if (mockUserStr) {
+                    try {
+                        callback(JSON.parse(mockUserStr));
+                        return true;
+                    } catch(e) {}
+                }
             }
             return false;
         };
@@ -832,11 +855,16 @@ const db = {
 
         window.addEventListener("mock_auth_changed", handleMockAuth);
         
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (!checkAuth()) {
-                callback(user);
-            }
-        });
+        let unsubscribe = () => {};
+        if (auth) {
+            unsubscribe = onAuthStateChanged(auth, (user) => {
+                if (!checkAuth()) {
+                    callback(user);
+                }
+            });
+        } else {
+            checkAuth();
+        }
 
         // Initial check
         checkAuth();
