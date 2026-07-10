@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════════════════════════════
     const loginOverlay   = document.getElementById('login-overlay');
     const loginForm      = document.getElementById('login-form');
-    const loginError     = document.getElementById('login-error-msg');
+    const loginError     = document.getElementById('login-error-msg') || document.getElementById('login-error');
     const logoutBtn      = document.getElementById('logout-btn');
     const mobileMenuBtn  = document.getElementById('mobile-menu-btn');
     const adminSidebar   = document.querySelector('.admin-sidebar');
@@ -405,53 +405,57 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════════════════════════════
     // LOGIN FORM SUBMIT
     // ══════════════════════════════════════════════════════════════════════════
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        loginError.style.display = 'none';
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (loginError) loginError.style.display = 'none';
 
-        const raw  = document.getElementById('admin-user').value.trim();
-        const pass = document.getElementById('admin-pass').value.trim();
+            const raw  = document.getElementById('admin-user').value.trim();
+            const pass = document.getElementById('admin-pass').value.trim();
 
-        // Convenience shorthand: "admin" → "admin@12degrees.store"
-        const email = raw.includes('@') ? raw : `${raw}@12degrees.store`;
+            // Convenience shorthand: "admin" → "admin@12degrees.store"
+            const email = raw.includes('@') ? raw : `${raw}@12degrees.store`;
 
-        const btn = loginForm.querySelector('button[type="submit"]');
-        btn.disabled     = true;
-        btn.textContent  = 'Authenticating…';
+            const btn = loginForm.querySelector('button[type="submit"]');
+            btn.disabled     = true;
+            btn.textContent  = 'Authenticating…';
 
-        try {
-            await window.storeDb.adminSignIn(email, pass);
-            loginForm.reset();
-            // onAuthStateChanged will fire automatically and hideLogin()
-        } catch (err) {
-            console.error('Login error:', err.code, err.message);
-            let msg = 'Invalid credentials. Please try again.';
-            if (err.code === 'auth/invalid-email')      msg = 'Invalid email format.';
-            if (err.code === 'auth/user-not-found')     msg = 'No account found with that email.';
-            if (err.code === 'auth/wrong-password')     msg = 'Incorrect password.';
-            if (err.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
-            if (err.code === 'auth/too-many-requests')  msg = 'Too many attempts. Please wait a few minutes.';
-            showLogin(msg);
-        } finally {
-            btn.disabled    = false;
-            btn.textContent = 'Authenticate';
-        }
-    });
+            try {
+                await window.storeDb.adminSignIn(email, pass);
+                loginForm.reset();
+                // onAuthStateChanged will fire automatically and hideLogin()
+            } catch (err) {
+                console.error('Login error:', err.code, err.message);
+                let msg = 'Invalid credentials. Please try again.';
+                if (err.code === 'auth/invalid-email')      msg = 'Invalid email format.';
+                if (err.code === 'auth/user-not-found')     msg = 'No account found with that email.';
+                if (err.code === 'auth/wrong-password')     msg = 'Incorrect password.';
+                if (err.code === 'auth/invalid-credential') msg = 'Wrong email or password.';
+                if (err.code === 'auth/too-many-requests')  msg = 'Too many attempts. Please wait a few minutes.';
+                showLogin(msg);
+            } finally {
+                btn.disabled    = false;
+                btn.textContent = 'Authenticate';
+            }
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // LOGOUT
     // ══════════════════════════════════════════════════════════════════════════
-    logoutBtn.addEventListener('click', async () => {
-        await window.storeDb.adminSignOut();
-        dashboardInitialised = false;
-        products = [];
-        orders   = [];
-        try { salesChartInstance?.destroy(); } catch(e) {}
-        try { categoryChartInstance?.destroy(); } catch(e) {}
-        salesChartInstance    = null;
-        categoryChartInstance = null;
-        // onAuthStateChanged fires → showLogin() called automatically
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', async () => {
+            await window.storeDb.adminSignOut();
+            dashboardInitialised = false;
+            products = [];
+            orders   = [];
+            try { salesChartInstance?.destroy(); } catch(e) {}
+            try { categoryChartInstance?.destroy(); } catch(e) {}
+            salesChartInstance    = null;
+            categoryChartInstance = null;
+            // onAuthStateChanged fires → showLogin() called automatically
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // DASHBOARD INITIALISATION
@@ -661,14 +665,20 @@ document.addEventListener('DOMContentLoaded', () => {
         productModal.classList.add('open');
     }
 
-    prodImgInput.addEventListener('blur', () => {
-        const url = prodImgInput.value.trim();
-        if (url) {
-            formImgPreview.src = url;
-            formImgPreview.style.display = 'block';
-            formImgPreviewPlaceholder.style.display = 'none';
-        }
-    });
+    if (prodImgInput) {
+        prodImgInput.addEventListener('blur', () => {
+            const url = prodImgInput.value.trim();
+            if (url) {
+                if (formImgPreview) {
+                    formImgPreview.src = url;
+                    formImgPreview.style.display = 'block';
+                }
+                if (formImgPreviewPlaceholder) {
+                    formImgPreviewPlaceholder.style.display = 'none';
+                }
+            }
+        });
+    }
 
     function compressImage(file, maxWidth = 500, maxHeight = 500, quality = 0.75) {
         return new Promise((resolve, reject) => {
@@ -732,14 +742,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    productForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        
-        const imageUrl = prodImgInput.value.trim();
-        if (!imageUrl) {
-            await showAlert('Please provide a product image URL or choose a file to upload.', 'Image Required');
-            return;
-        }
+    if (productForm) {
+        productForm.addEventListener('submit', async e => {
+            e.preventDefault();
+            
+            const imageUrl = prodImgInput ? prodImgInput.value.trim() : '';
+            if (!imageUrl) {
+                await showAlert('Please provide a product image URL or choose a file to upload.', 'Image Required');
+                return;
+            }
 
         const btn = productForm.querySelector('button[type="submit"]');
         const orig = btn.innerHTML;
@@ -782,6 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.innerHTML = orig;
         }
     });
+}
 
     async function deleteProduct(id) {
         try { 
@@ -793,8 +805,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    closeProductModalBtn.addEventListener('click', () => productModal.classList.remove('open'));
-    productModal.addEventListener('click', e => { if (e.target === productModal) productModal.classList.remove('open'); });
+    if (closeProductModalBtn) {
+        closeProductModalBtn.addEventListener('click', () => {
+            if (productModal) productModal.classList.remove('open');
+        });
+    }
+    if (productModal) {
+        productModal.addEventListener('click', e => {
+            if (e.target === productModal) productModal.classList.remove('open');
+        });
+    }
 
     // ══════════════════════════════════════════════════════════════════════════
     // CATEGORIES MANAGEMENT
@@ -893,54 +913,64 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryModal.classList.add('open');
     }
 
-    closeCategoryModalBtn.addEventListener('click', () => categoryModal.classList.remove('open'));
-    categoryModal.addEventListener('click', e => { if (e.target === categoryModal) categoryModal.classList.remove('open'); });
+    if (closeCategoryModalBtn) {
+        closeCategoryModalBtn.addEventListener('click', () => {
+            if (categoryModal) categoryModal.classList.remove('open');
+        });
+    }
+    if (categoryModal) {
+        categoryModal.addEventListener('click', e => {
+            if (e.target === categoryModal) categoryModal.classList.remove('open');
+        });
+    }
 
-    categoryForm.addEventListener('submit', async e => {
-        e.preventDefault();
+    if (categoryForm) {
+        categoryForm.addEventListener('submit', async e => {
+            e.preventDefault();
 
-        let id = document.getElementById('cat-id').value.trim();
-        const isNew = !document.getElementById('form-category-old-id').value;
+            let id = document.getElementById('cat-id').value.trim();
+            const isNew = !document.getElementById('form-category-old-id').value;
 
-        if (isNew) {
-            const categories = window.storeDb ? window.storeDb.getCategories() : [];
-            let maxId = 0;
-            categories.forEach(c => {
-                const numericId = parseInt(c.id, 10);
-                if (!isNaN(numericId) && numericId > maxId) {
-                    maxId = numericId;
-                }
-            });
-            id = String(maxId + 1);
-        }
+            if (isNew) {
+                const categories = window.storeDb ? window.storeDb.getCategories() : [];
+                let maxId = 0;
+                categories.forEach(c => {
+                    const numericId = parseInt(c.id, 10);
+                    if (!isNaN(numericId) && numericId > maxId) {
+                        maxId = numericId;
+                    }
+                });
+                id = String(maxId + 1);
+            }
 
-        if (!id) {
-            await showAlert('Failed to generate Category ID.', 'Error');
-            return;
-        }
+            if (!id) {
+                await showAlert('Failed to generate Category ID.', 'Error');
+                return;
+            }
 
-        const name = document.getElementById('cat-name').value.trim();
-        const title = document.getElementById('cat-title').value.trim();
+            const name = document.getElementById('cat-name').value.trim();
+            const title = document.getElementById('cat-title').value.trim();
 
-        const btn = categoryForm.querySelector('button[type="submit"]');
-        const orig = btn.innerHTML;
-        btn.disabled = true;
-        btn.textContent = 'Saving category…';
+            const btn = categoryForm.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Saving category…';
 
-        const obj = { id, name, title };
+            const obj = { id, name, title };
 
-        try {
-            await window.storeDb.saveCategory(obj);
-            categoryModal.classList.remove('open');
-            await showAlert('Category saved successfully!', 'Success');
-        } catch (err) {
-            console.error(err);
-            await showAlert('Error saving category: ' + err.message, 'Error');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = orig;
-        }
-    });
+            try {
+                await window.storeDb.saveCategory(obj);
+                if (categoryModal) categoryModal.classList.remove('open');
+                await showAlert('Category saved successfully!', 'Success');
+            } catch (err) {
+                console.error(err);
+                await showAlert('Error saving category: ' + err.message, 'Error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        });
+    }
 
     function populateProductCategorySelect() {
         const select = document.getElementById('prod-cat');
@@ -1047,8 +1077,16 @@ document.addEventListener('DOMContentLoaded', () => {
         orderModal.classList.add('open');
     }
 
-    closeOrderModalBtn.addEventListener('click', () => orderModal.classList.remove('open'));
-    orderModal.addEventListener('click', e => { if (e.target === orderModal) orderModal.classList.remove('open'); });
+    if (closeOrderModalBtn) {
+        closeOrderModalBtn.addEventListener('click', () => {
+            if (orderModal) orderModal.classList.remove('open');
+        });
+    }
+    if (orderModal) {
+        orderModal.addEventListener('click', e => {
+            if (e.target === orderModal) orderModal.classList.remove('open');
+        });
+    }
 
     // ── Customers Section Logic ──
     function getCompiledCustomers() {

@@ -34,8 +34,12 @@ const firebaseConfig = {
   storageBucket: "degree-ce3ad.firebasestorage.app",
   messagingSenderId: "277688141959",
   appId: "1:277688141959:web:6c771f263929258b0c9022",
-  measurementId: "G-P8DJ2ZFYC0"
 };
+
+const isOffline = window.location.protocol === 'file:';
+if (isOffline) {
+    console.warn("⚠️ Local file protocol (file://) detected. Database features will use local storage mock fallback.");
+}
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -783,21 +787,9 @@ const db = {
     async adminSignIn(email, password) {
         // Enforce Firebase Auth when online
         if (!isOffline && auth) {
-            try {
-                const credential = await signInWithEmailAndPassword(auth, email, password);
-                localStorage.removeItem("mock_admin_user");
-                return credential.user;
-            } catch (err) {
-                // Sane fallback if they are using local development but protocol is not file://
-                if (email === "admin@12degrees.store" && password === "123456") {
-                    console.warn("Firebase sign-in failed. Falling back to local mock session.");
-                    const mockUser = { email: "admin@12degrees.store", uid: "mock-admin-uid" };
-                    localStorage.setItem("mock_admin_user", JSON.stringify(mockUser));
-                    window.dispatchEvent(new Event("mock_auth_changed"));
-                    return mockUser;
-                }
-                throw err;
-            }
+            const credential = await signInWithEmailAndPassword(auth, email, password);
+            localStorage.removeItem("mock_admin_user");
+            return credential.user;
         }
 
         // Offline / file protocol fallback
