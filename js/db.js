@@ -312,233 +312,218 @@ async function seedCategories() {
     await batch.commit();
 }
 
-// Categories real-time listener
-try {
-    if (firestoreDb) {
-        onSnapshot(collection(firestoreDb, "categories"), async (snapshot) => {
-            if (snapshot.empty) {
-                console.log("Categories database is empty.");
-                if (auth && auth.currentUser) {
-                    try {
-                        await seedCategories();
-                        return;
-                    } catch (err) {
-                        console.error("Auto-seeding categories failed:", err);
-                    }
-                }
-                cachedCategories = DEFAULT_CATEGORIES;
-                categoriesLoaded = true;
-                checkReady();
-            } else {
-                cachedCategories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                window.dispatchEvent(new Event('db_categories_updated'));
-                categoriesLoaded = true;
-                checkReady();
-            }
-        }, error => {
-            console.error("Categories subscription error: ", error);
-            cachedCategories = DEFAULT_CATEGORIES;
-            categoriesLoaded = true;
-            checkReady();
-        });
-    } else {
-        cachedCategories = DEFAULT_CATEGORIES;
-        categoriesLoaded = true;
-        checkReady();
-    }
-} catch (err) {
-    console.error("Categories listener initialization failed:", err);
-    cachedCategories = DEFAULT_CATEGORIES;
-    categoriesLoaded = true;
-    checkReady();
-}
-
-// Initialize Real-time Listeners
-try {
-    if (firestoreDb) {
-        onSnapshot(collection(firestoreDb, "products"), async (snapshot) => {
-            if (snapshot.empty) {
-                console.log("Products database is empty.");
-                if (auth && auth.currentUser) {
-                    try {
-                        await seedProducts();
-                        return; // Listener will re-fire with the new documents
-                    } catch (err) {
-                        console.error("Auto-seeding products failed:", err);
-                    }
-                }
-                cachedProducts = DEFAULT_PRODUCTS;
-                productsLoaded = true;
-                checkReady();
-            } else {
-                cachedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                window.dispatchEvent(new Event('db_products_updated'));
-                productsLoaded = true;
-                checkReady();
-            }
-        }, error => {
-            console.error("Products subscription error: ", error);
-            cachedProducts = DEFAULT_PRODUCTS;
-            productsLoaded = true;
-            checkReady();
-        });
-    } else {
-        cachedProducts = DEFAULT_PRODUCTS;
-        productsLoaded = true;
-        checkReady();
-    }
-} catch (err) {
-    console.error("Products listener initialization failed:", err);
-    cachedProducts = DEFAULT_PRODUCTS;
-    productsLoaded = true;
-    checkReady();
-}
-
+// Global listener unsubscribers
+let productsListenerUnsubscribe = null;
+let categoriesListenerUnsubscribe = null;
 let ordersListenerUnsubscribe = null;
+let analyticsListenerUnsubscribe = null;
+let reviewsListenerUnsubscribe = null;
 
 try {
     if (auth) {
         onAuthStateChanged(auth, (user) => {
-            if (ordersListenerUnsubscribe) {
-                ordersListenerUnsubscribe();
-                ordersListenerUnsubscribe = null;
-            }
+            // Unsubscribe existing listeners
+            if (productsListenerUnsubscribe) { productsListenerUnsubscribe(); productsListenerUnsubscribe = null; }
+            if (categoriesListenerUnsubscribe) { categoriesListenerUnsubscribe(); categoriesListenerUnsubscribe = null; }
+            if (ordersListenerUnsubscribe) { ordersListenerUnsubscribe(); ordersListenerUnsubscribe = null; }
+            if (analyticsListenerUnsubscribe) { analyticsListenerUnsubscribe(); analyticsListenerUnsubscribe = null; }
+            if (reviewsListenerUnsubscribe) { reviewsListenerUnsubscribe(); reviewsListenerUnsubscribe = null; }
 
-            try {
-                if (firestoreDb) {
-                    ordersListenerUnsubscribe = onSnapshot(collection(firestoreDb, "orders"), async (snapshot) => {
-                        if (snapshot.empty) {
-                            console.log("Orders database is empty.");
-                            if (auth && auth.currentUser) {
-                                try {
-                                    await seedOrders();
-                                    return; // Listener will re-fire with the new documents
-                                } catch (err) {
-                                    console.error("Auto-seeding orders failed:", err);
-                                }
+            // Reset loaded flags
+            productsLoaded = false;
+            categoriesLoaded = false;
+            ordersLoaded = false;
+            analyticsLoaded = false;
+            reviewsLoaded = false;
+
+            if (firestoreDb) {
+                // 1. Categories
+                categoriesListenerUnsubscribe = onSnapshot(collection(firestoreDb, "categories"), async (snapshot) => {
+                    if (snapshot.empty) {
+                        console.log("Categories database is empty.");
+                        if (auth && auth.currentUser) {
+                            try {
+                                await seedCategories();
+                                return;
+                            } catch (err) {
+                                console.error("Auto-seeding categories failed:", err);
                             }
-                            cachedOrders = DEFAULT_ORDERS;
-                            ordersLoaded = true;
-                            checkReady();
-                        } else {
-                            cachedOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                            cachedOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
-                            window.dispatchEvent(new Event('db_orders_updated'));
-                            ordersLoaded = true;
-                            checkReady();
                         }
-                    }, error => {
-                        console.error("Orders subscription error: ", error);
+                        cachedCategories = DEFAULT_CATEGORIES;
+                        categoriesLoaded = true;
+                        checkReady();
+                    } else {
+                        cachedCategories = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        window.dispatchEvent(new Event('db_categories_updated'));
+                        categoriesLoaded = true;
+                        checkReady();
+                    }
+                }, error => {
+                    console.error("Categories subscription error: ", error);
+                    cachedCategories = DEFAULT_CATEGORIES;
+                    categoriesLoaded = true;
+                    checkReady();
+                });
+
+                // 2. Products
+                productsListenerUnsubscribe = onSnapshot(collection(firestoreDb, "products"), async (snapshot) => {
+                    if (snapshot.empty) {
+                        console.log("Products database is empty.");
+                        if (auth && auth.currentUser) {
+                            try {
+                                await seedProducts();
+                                return;
+                            } catch (err) {
+                                console.error("Auto-seeding products failed:", err);
+                            }
+                        }
+                        cachedProducts = DEFAULT_PRODUCTS;
+                        productsLoaded = true;
+                        checkReady();
+                    } else {
+                        cachedProducts = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        window.dispatchEvent(new Event('db_products_updated'));
+                        productsLoaded = true;
+                        checkReady();
+                    }
+                }, error => {
+                    console.error("Products subscription error: ", error);
+                    cachedProducts = DEFAULT_PRODUCTS;
+                    productsLoaded = true;
+                    checkReady();
+                });
+
+                // 3. Orders
+                ordersListenerUnsubscribe = onSnapshot(collection(firestoreDb, "orders"), async (snapshot) => {
+                    if (snapshot.empty) {
+                        console.log("Orders database is empty.");
+                        if (auth && auth.currentUser) {
+                            try {
+                                await seedOrders();
+                                return;
+                            } catch (err) {
+                                console.error("Auto-seeding orders failed:", err);
+                            }
+                        }
                         cachedOrders = DEFAULT_ORDERS;
                         ordersLoaded = true;
                         checkReady();
-                    });
-                } else {
+                    } else {
+                        cachedOrders = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        cachedOrders.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        window.dispatchEvent(new Event('db_orders_updated'));
+                        ordersLoaded = true;
+                        checkReady();
+                    }
+                }, error => {
+                    console.error("Orders subscription error: ", error);
                     cachedOrders = DEFAULT_ORDERS;
                     ordersLoaded = true;
                     checkReady();
-                }
-            } catch (err) {
-                console.error("Orders listener setup failed:", err);
-                cachedOrders = DEFAULT_ORDERS;
-                ordersLoaded = true;
-                checkReady();
-            }
-        });
-    } else {
-        cachedOrders = DEFAULT_ORDERS;
-        ordersLoaded = true;
-        checkReady();
-    }
-} catch (err) {
-    console.error("Auth state observer setup failed:", err);
-    cachedOrders = DEFAULT_ORDERS;
-    ordersLoaded = true;
-    checkReady();
-}
+                });
 
-try {
-    if (firestoreDb) {
-        onSnapshot(doc(firestoreDb, "analytics", "storefront"), async (snapshot) => {
-            if (!snapshot.exists()) {
-                console.log("Analytics database document is missing.");
-                if (auth && auth.currentUser) {
-                    try {
-                        await seedAnalytics();
-                        return; // Listener will re-fire with the new document
-                    } catch (err) {
-                        console.error("Auto-seeding analytics failed:", err);
+                // 4. Analytics
+                analyticsListenerUnsubscribe = onSnapshot(doc(firestoreDb, "analytics", "storefront"), async (snapshot) => {
+                    if (!snapshot.exists()) {
+                        console.log("Analytics database document is missing.");
+                        if (auth && auth.currentUser) {
+                            try {
+                                await seedAnalytics();
+                                return;
+                            } catch (err) {
+                                console.error("Auto-seeding analytics failed:", err);
+                            }
+                        }
+                        cachedViews = 432;
+                        cachedDiscount = 10;
+                        analyticsLoaded = true;
+                        checkReady();
+                    } else {
+                        cachedViews = snapshot.data().views || 0;
+                        cachedDiscount = snapshot.data().discount !== undefined ? Number(snapshot.data().discount) : 10;
+                        window.dispatchEvent(new Event('db_analytics_updated'));
+                        analyticsLoaded = true;
+                        checkReady();
                     }
-                }
+                }, error => {
+                    console.error("Analytics subscription error: ", error);
+                    cachedViews = 432;
+                    cachedDiscount = 10;
+                    analyticsLoaded = true;
+                    checkReady();
+                });
+
+                // 5. Reviews
+                reviewsListenerUnsubscribe = onSnapshot(collection(firestoreDb, "reviews"), async (snapshot) => {
+                    if (snapshot.empty) {
+                        console.log("Reviews database is empty.");
+                        if (auth && auth.currentUser) {
+                            try {
+                                await seedReviews();
+                                return;
+                            } catch (err) {
+                                console.error("Auto-seeding reviews failed:", err);
+                            }
+                        }
+                        cachedReviews = DEFAULT_REVIEWS;
+                        reviewsLoaded = true;
+                        checkReady();
+                    } else {
+                        cachedReviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+                        cachedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        window.dispatchEvent(new Event('db_reviews_updated'));
+                        reviewsLoaded = true;
+                        checkReady();
+                    }
+                }, error => {
+                    console.error("Reviews subscription error: ", error);
+                    cachedReviews = DEFAULT_REVIEWS;
+                    reviewsLoaded = true;
+                    checkReady();
+                });
+            } else {
+                // Fallbacks when firestoreDb is not defined
+                cachedProducts = DEFAULT_PRODUCTS;
+                cachedCategories = DEFAULT_CATEGORIES;
+                cachedOrders = DEFAULT_ORDERS;
+                cachedReviews = DEFAULT_REVIEWS;
                 cachedViews = 432;
                 cachedDiscount = 10;
+                productsLoaded = true;
+                categoriesLoaded = true;
+                ordersLoaded = true;
                 analyticsLoaded = true;
-                checkReady();
-            } else {
-                cachedViews = snapshot.data().views || 0;
-                cachedDiscount = snapshot.data().discount !== undefined ? Number(snapshot.data().discount) : 10;
-                window.dispatchEvent(new Event('db_analytics_updated'));
-                analyticsLoaded = true;
+                reviewsLoaded = true;
                 checkReady();
             }
-        }, error => {
-            console.error("Analytics subscription error: ", error);
-            cachedViews = 432;
-            cachedDiscount = 10;
-            analyticsLoaded = true;
-            checkReady();
         });
     } else {
+        // Fallbacks when auth is not defined
+        cachedProducts = DEFAULT_PRODUCTS;
+        cachedCategories = DEFAULT_CATEGORIES;
+        cachedOrders = DEFAULT_ORDERS;
+        cachedReviews = DEFAULT_REVIEWS;
         cachedViews = 432;
         cachedDiscount = 10;
+        productsLoaded = true;
+        categoriesLoaded = true;
+        ordersLoaded = true;
         analyticsLoaded = true;
-        checkReady();
-    }
-} catch (err) {
-    console.error("Analytics listener initialization failed:", err);
-    cachedViews = 432;
-    cachedDiscount = 10;
-    analyticsLoaded = true;
-    checkReady();
-}
-
-try {
-    if (firestoreDb) {
-        onSnapshot(collection(firestoreDb, "reviews"), async (snapshot) => {
-            if (snapshot.empty) {
-                console.log("Reviews database is empty.");
-                if (auth && auth.currentUser) {
-                    try {
-                        await seedReviews();
-                        return; // Listener will re-fire with the new documents
-                    } catch (err) {
-                        console.error("Auto-seeding reviews failed:", err);
-                    }
-                }
-                cachedReviews = DEFAULT_REVIEWS;
-                reviewsLoaded = true;
-                checkReady();
-            } else {
-                cachedReviews = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-                cachedReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-                window.dispatchEvent(new Event('db_reviews_updated'));
-                reviewsLoaded = true;
-                checkReady();
-            }
-        }, error => {
-            console.error("Reviews subscription error: ", error);
-            cachedReviews = DEFAULT_REVIEWS;
-            reviewsLoaded = true;
-            checkReady();
-        });
-    } else {
-        cachedReviews = DEFAULT_REVIEWS;
         reviewsLoaded = true;
         checkReady();
     }
 } catch (err) {
-    console.error("Reviews listener initialization failed:", err);
+    console.error("Auth state observer setup failed:", err);
+    cachedProducts = DEFAULT_PRODUCTS;
+    cachedCategories = DEFAULT_CATEGORIES;
+    cachedOrders = DEFAULT_ORDERS;
     cachedReviews = DEFAULT_REVIEWS;
+    cachedViews = 432;
+    cachedDiscount = 10;
+    productsLoaded = true;
+    categoriesLoaded = true;
+    ordersLoaded = true;
+    analyticsLoaded = true;
     reviewsLoaded = true;
     checkReady();
 }
