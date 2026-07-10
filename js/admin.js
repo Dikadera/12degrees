@@ -1503,4 +1503,65 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Failed to update categories chart:', e);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // SYSTEM DIAGNOSTICS LOGIC
+    // ══════════════════════════════════════════════════════════════════════════
+    const diagPanel = document.getElementById('diagnostics-panel');
+    const diagTrigger = document.getElementById('diag-trigger-btn');
+    if (diagTrigger && diagPanel) {
+        diagTrigger.addEventListener('click', () => {
+            diagPanel.style.display = diagPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        const diagMode = document.getElementById('diag-mode');
+        const diagAuth = document.getElementById('diag-auth');
+        const diagErrors = document.getElementById('diag-errors');
+
+        // Capture console errors reactively
+        const originalConsoleError = console.error;
+        console.error = function(...args) {
+            originalConsoleError.apply(console, args);
+            if (diagErrors) {
+                const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+                const errorDiv = document.createElement('div');
+                errorDiv.style.borderBottom = '1px solid #f1f5f9';
+                errorDiv.style.padding = '4px 0';
+                errorDiv.style.wordBreak = 'break-all';
+                errorDiv.style.color = '#ef4444';
+                errorDiv.textContent = `🔴 [${new Date().toLocaleTimeString()}] ${message}`;
+                diagErrors.insertBefore(errorDiv, diagErrors.firstChild);
+            }
+        };
+
+        // Capture console warnings reactively
+        const originalConsoleWarn = console.warn;
+        console.warn = function(...args) {
+            originalConsoleWarn.apply(console, args);
+            if (diagErrors) {
+                const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+                const warnDiv = document.createElement('div');
+                warnDiv.style.borderBottom = '1px solid #f1f5f9';
+                warnDiv.style.padding = '4px 0';
+                warnDiv.style.wordBreak = 'break-all';
+                warnDiv.style.color = '#d97706';
+                warnDiv.textContent = `🟡 [${new Date().toLocaleTimeString()}] ${message}`;
+                diagErrors.insertBefore(warnDiv, diagErrors.firstChild);
+            }
+        };
+
+        // Periodically update state info
+        setInterval(() => {
+            if (diagMode) {
+                const protocol = window.location.protocol;
+                const hostname = window.location.hostname;
+                diagMode.innerHTML = `<strong>Host:</strong> ${hostname} (${protocol})<br><strong>Store DB:</strong> ${window.storeDb ? 'Loaded' : 'Not Loaded'}`;
+            }
+
+            if (diagAuth) {
+                const currentUser = window.storeDb && window.storeDb.getCurrentUser ? window.storeDb.getCurrentUser() : null;
+                diagAuth.innerHTML = `<strong>Auth User:</strong> ${currentUser ? currentUser.email : 'Logged Out'}`;
+            }
+        }, 1000);
+    }
 });

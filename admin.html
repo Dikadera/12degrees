@@ -788,7 +788,18 @@
                 <button id="alert-cancel-btn" style="display: none;">Cancel</button>
             </div>
         </div>
+    <!-- System Diagnostics Floating Panel -->
+    <div id="diagnostics-panel" style="position:fixed; bottom:20px; right:20px; z-index:999999; background:white; border:1px solid #cbd5e1; border-radius:8px; padding:12px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1); max-width:320px; font-family:monospace; font-size:11px; display:none; color:#1e293b;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:4px;">
+            <strong style="color:var(--admin-primary);">System Diagnostics</strong>
+            <button onclick="document.getElementById('diagnostics-panel').style.display='none'" style="border:none; background:none; cursor:pointer; font-weight:bold; font-size:14px; color:#64748b;">×</button>
+        </div>
+        <div id="diag-mode" style="margin-bottom:4px;">Mode: Loading...</div>
+        <div id="diag-auth" style="margin-bottom:4px;">Auth: Loading...</div>
+        <div style="font-weight:bold; margin-top:8px; border-top:1px solid #f1f5f9; padding-top:4px;">Live Log:</div>
+        <div id="diag-errors" style="margin-top:4px; max-height:80px; overflow-y:auto; font-size:10px; color:#ef4444; line-height:1.4;">No sync errors detected.</div>
     </div>
+    <button id="diag-trigger-btn" style="position:fixed; bottom:20px; right:20px; z-index:999998; width:36px; height:36px; border-radius:50%; background:#ef4444; color:white; border:none; cursor:pointer; font-weight:bold; font-size:16px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.1); display:flex; justify-content:center; align-items:center;">🛠</button>
 
     <!-- DB Scripts -->
     <script type="module" src="js/db.js"></script>
