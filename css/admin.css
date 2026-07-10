@@ -26,13 +26,19 @@
     padding: 0;
 }
 
+html, body {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    width: 100%;
+    position: relative;
+}
+
 body {
     font-family: var(--font-body);
     background-color: var(--admin-bg);
     color: var(--admin-text);
     display: flex;
     min-height: 100vh;
-    overflow-x: hidden;
 }
 
 h1, h2, h3, h4 {

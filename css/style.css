@@ -131,11 +131,12 @@ body.dark-mode .section-label .label-text {
     padding: 0;
 }
 
-html {
+html, body {
     scroll-behavior: smooth;
-    overflow-x: hidden;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
     width: 100%;
-    max-width: 100%;
+    position: relative;
 }
 
 body {
@@ -143,9 +144,6 @@ body {
     background: var(--paper);
     color: var(--ink);
     line-height: 1.6;
-    overflow-x: hidden;
-    width: 100%;
-    max-width: 100%;
     -webkit-font-smoothing: antialiased;
 }
 
