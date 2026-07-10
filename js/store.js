@@ -3,24 +3,31 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('📦 Store.js: DOMContentLoaded fired');
 
     // Rotate promo notification texts dynamically
-    const promoTexts = [
-        "10% discount on every purchase to celebrate our new website!",
-        "✨ Grand Opening Launch: Discount auto-applied at checkout!",
-        "🚚 Free delivery in Awka on orders above ₦30,000!"
-    ];
+    function getPromoTexts() {
+        const discountPercent = window.storeDb ? window.storeDb.getDiscount() : 10;
+        return [
+            `${discountPercent}% discount on every purchase to celebrate our new website!`,
+            "✨ Grand Opening Launch: Discount auto-applied at checkout!",
+            "🚚 Free delivery in Awka on orders above ₦30,000!"
+        ];
+    }
     let currentPromoIdx = 0;
     const promoTextElements = document.querySelectorAll('.promo-text');
     if (promoTextElements.length > 0) {
+        // Set initial content
+        promoTextElements.forEach(el => {
+            el.textContent = getPromoTexts()[0];
+        });
         setInterval(() => {
-            currentPromoIdx = (currentPromoIdx + 1) % promoTexts.length;
+            currentPromoIdx = (currentPromoIdx + 1) % getPromoTexts().length;
             promoTextElements.forEach(el => {
                 el.style.opacity = 0;
                 setTimeout(() => {
-                    el.textContent = promoTexts[currentPromoIdx];
+                    el.textContent = getPromoTexts()[currentPromoIdx];
                     el.style.opacity = 1;
-                }, 300);
+                }, 400);
             });
-        }, 4000);
+        }, 6000);
     }
 
     // Select elements
@@ -254,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const isOutOfStock = product.stock <= 0;
+        const priceDetails = getProductPriceDetails(product);
 
         card.innerHTML = `
             ${badgeHTML}
@@ -270,8 +278,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-meta">
                     <div style="display:flex; flex-direction:column; gap:2px">
-                        <span class="product-price" style="color:var(--red)">₦${formatMoney(Math.round(product.price * 0.90))}</span>
-                        <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
+                        ${priceDetails.hasDiscount ? `
+                            <span class="product-price" style="color:var(--red)">₦${formatMoney(priceDetails.discountedPrice)}</span>
+                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
+                        ` : `
+                            <span class="product-price">₦${formatMoney(product.price)}</span>
+                        `}
                     </div>
                     <span class="product-rating">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -471,6 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 badgeHTML = `<span class="product-badge ${product.badge.toLowerCase().replace(' ', '-')}">${product.badge}</span>`;
             }
             const isOOS = product.stock <= 0;
+            const priceDetails = getProductPriceDetails(product);
 
             card.innerHTML = `
                 ${badgeHTML}
@@ -487,8 +500,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="product-name">${product.name}</h3>
                     <div class="product-meta">
                         <div style="display:flex; flex-direction:column; gap:2px">
-                            <span class="product-price" style="color:var(--red)">₦${formatMoney(Math.round(product.price * 0.90))}</span>
-                            <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
+                            ${priceDetails.hasDiscount ? `
+                                <span class="product-price" style="color:var(--red)">₦${formatMoney(priceDetails.discountedPrice)}</span>
+                                <span style="text-decoration:line-through; font-size:12.5px; color:var(--ink-4); font-weight:500">₦${formatMoney(product.price)}</span>
+                            ` : `
+                                <span class="product-price">₦${formatMoney(product.price)}</span>
+                            `}
                         </div>
                         <span class="product-rating">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -572,6 +589,35 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProducts();
         renderFeaturedProducts();
     });
+
+    // React to analytics/discount updates from DB
+    window.addEventListener('db_analytics_updated', () => {
+        renderProducts();
+        renderFeaturedProducts();
+        updateCartUI();
+    });
+
+    function getProductPriceDetails(product) {
+        const generalDiscount = window.storeDb ? window.storeDb.getDiscount() : 10;
+        let activeDiscount = generalDiscount;
+        let isIndividual = false;
+
+        if (product.discount !== undefined && product.discount !== null && product.discount > 0) {
+            activeDiscount = Number(product.discount);
+            isIndividual = true;
+        }
+
+        const discountFactor = (100 - activeDiscount) / 100;
+        const discountedPrice = Math.round(product.price * discountFactor);
+
+        return {
+            originalPrice: product.price,
+            discountedPrice: discountedPrice,
+            discountPercent: activeDiscount,
+            hasDiscount: activeDiscount > 0,
+            isIndividual: isIndividual
+        };
+    }
 
     // --- Helpers ---
     function formatCategory(cat) {
@@ -735,6 +781,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalItems = 0;
         let totalPrice = 0;
+        let totalDiscount = 0;
 
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = `
@@ -747,8 +794,12 @@ document.addEventListener('DOMContentLoaded', () => {
             checkoutBtn.disabled = true;
         } else {
             cart.forEach(item => {
+                const product = products.find(p => p.id === item.productId) || item;
+                const priceDetails = getProductPriceDetails(product);
+
                 totalItems += item.quantity;
-                totalPrice += item.price * item.quantity;
+                totalPrice += product.price * item.quantity;
+                totalDiscount += (product.price - priceDetails.discountedPrice) * item.quantity;
 
                 const itemRow = document.createElement('div');
                 itemRow.className = 'cart-item';
@@ -786,19 +837,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const cartDiscountRow = document.getElementById('cart-discount-row');
         const cartDiscountVal = document.getElementById('cart-discount-val');
 
-        const discount = totalPrice * 0.10;
-        const grandTotal = totalPrice - discount;
-
         if (cartSubtotalPrice) cartSubtotalPrice.innerText = `₦ ${formatMoney(totalPrice)}`;
         if (cartDiscountRow) {
-            if (totalPrice > 0) {
+            if (totalPrice > 0 && totalDiscount > 0) {
                 cartDiscountRow.style.display = 'flex';
-                cartDiscountVal.innerText = `-₦ ${formatMoney(discount)}`;
+                cartDiscountVal.innerText = `-₦ ${formatMoney(totalDiscount)}`;
+                // Update label
+                const labelEl = document.querySelector('.discount-label-pct');
+                if (labelEl) {
+                    const hasIndividualDiscount = cart.some(item => {
+                        const p = products.find(prod => prod.id === item.productId);
+                        return p && p.discount && p.discount > 0;
+                    });
+                    if (hasIndividualDiscount) {
+                        labelEl.innerText = `Product & Launch Discount`;
+                    } else {
+                        const generalDiscount = window.storeDb ? window.storeDb.getDiscount() : 10;
+                        labelEl.innerText = `${generalDiscount}% Launch Discount`;
+                    }
+                }
             } else {
                 cartDiscountRow.style.display = 'none';
             }
         }
-        cartTotalPrice.innerText = `₦ ${formatMoney(grandTotal)}`;
+        cartTotalPrice.innerText = `₦ ${formatMoney(totalPrice - totalDiscount)}`;
 
         // Trigger header cart button bounce
         if (totalItems > 0) {
@@ -959,6 +1021,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isOutOfStock = product.stock <= 0;
         activeQuickviewProductId = productId;
+        const priceDetails = getProductPriceDetails(product);
 
         quickviewContent.innerHTML = `
             <div class="quickview-main-info">
@@ -973,7 +1036,14 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span style="color:var(--gold); margin-right:4px;">★</span>
                         <strong>${(product.rating || 0).toFixed(1)}</strong> <span style="color:var(--text-muted); font-size:13px;">(Reviewer Favorite)</span>
                     </div>
-                    <div class="quickview-price">₦ ${formatMoney(product.price)}</div>
+                    ${priceDetails.hasDiscount ? `
+                        <div class="quickview-price" style="display:flex; align-items:baseline; gap:12px;">
+                            <span style="color:var(--red); font-size:24px; font-weight:700;">₦ ${formatMoney(priceDetails.discountedPrice)}</span>
+                            <span style="text-decoration:line-through; font-size:16px; color:var(--ink-4); font-weight:500;">₦ ${formatMoney(product.price)}</span>
+                        </div>
+                    ` : `
+                        <div class="quickview-price" style="font-size:24px; font-weight:700;">₦ ${formatMoney(product.price)}</div>
+                    `}
                     <p class="quickview-desc">${product.description}</p>
                     <div style="font-size:13px; margin-bottom: 20px;">
                         <strong>Stock Availability:</strong> 
@@ -1013,20 +1083,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let totalItems = 0;
         let totalPrice = 0;
+        let totalDiscount = 0;
         cart.forEach(item => {
-            totalItems += item.quantity;
-            totalPrice += item.price * item.quantity;
+            const product = products.find(p => p.id === item.productId);
+            if (product) {
+                const priceDetails = getProductPriceDetails(product);
+                totalItems += item.quantity;
+                totalPrice += product.price * item.quantity;
+                totalDiscount += (product.price - priceDetails.discountedPrice) * item.quantity;
+            } else {
+                totalItems += item.quantity;
+                totalPrice += item.price * item.quantity;
+            }
         });
 
-        const discount = totalPrice * 0.10;
-        const grandTotal = totalPrice - discount;
+        const grandTotal = totalPrice - totalDiscount;
 
         const subtotalValEl = document.getElementById('checkout-subtotal-val');
         const discountValEl = document.getElementById('checkout-discount-val');
+        const discountLabelEl = document.querySelector('.discount-label-pct-plain');
+        const checkoutDiscountRow = document.getElementById('checkout-discount-row');
 
         if (checkoutItemsQty) checkoutItemsQty.innerText = totalItems;
         if (subtotalValEl) subtotalValEl.innerText = `₦ ${formatMoney(totalPrice)}`;
-        if (discountValEl) discountValEl.innerText = `-₦ ${formatMoney(discount)}`;
+        if (discountValEl) discountValEl.innerText = `-₦ ${formatMoney(totalDiscount)}`;
+        
+        if (checkoutDiscountRow) {
+            if (totalDiscount > 0) {
+                checkoutDiscountRow.style.display = 'flex';
+                if (discountLabelEl) {
+                    const hasIndividualDiscount = cart.some(item => {
+                        const p = products.find(prod => prod.id === item.productId);
+                        return p && p.discount && p.discount > 0;
+                    });
+                    if (hasIndividualDiscount) {
+                        discountLabelEl.innerText = `Product & Launch Discount`;
+                    } else {
+                        const generalDiscount = window.storeDb ? window.storeDb.getDiscount() : 10;
+                        discountLabelEl.innerText = `${generalDiscount}% Launch Discount`;
+                    }
+                }
+            } else {
+                checkoutDiscountRow.style.display = 'none';
+            }
+        }
         if (checkoutTotalVal) checkoutTotalVal.innerText = `₦ ${formatMoney(grandTotal)}`;
         checkoutModal.classList.add('open');
     }
@@ -1053,22 +1153,35 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerHTML = `<span>Redirecting to ${selectedGateway === 'flutterwave' ? 'Flutterwave' : 'Paystack'}...</span>`;
 
         let totalPrice = 0;
+        let totalDiscount = 0;
         const orderItems = [];
 
         cart.forEach((item) => {
-            const itemTotal = item.price * item.quantity;
+            const product = products.find(p => p.id === item.productId);
+            const priceVal = product ? product.price : item.price;
+            const itemTotal = priceVal * item.quantity;
             totalPrice += itemTotal;
 
-            orderItems.push({
-                productId: item.productId,
-                name: item.name,
-                price: item.price,
-                quantity: item.quantity
-            });
+            if (product) {
+                const priceDetails = getProductPriceDetails(product);
+                totalDiscount += (product.price - priceDetails.discountedPrice) * item.quantity;
+                orderItems.push({
+                    productId: item.productId,
+                    name: item.name,
+                    price: priceDetails.discountedPrice,
+                    quantity: item.quantity
+                });
+            } else {
+                orderItems.push({
+                    productId: item.productId,
+                    name: item.name,
+                    price: item.price,
+                    quantity: item.quantity
+                });
+            }
         });
 
-        const discount = totalPrice * 0.10;
-        const grandTotal = totalPrice - discount;
+        const grandTotal = totalPrice - totalDiscount;
 
         try {
             // Request transaction initialization from our secure backend API

@@ -246,6 +246,7 @@ let cachedOrders = [];
 let cachedReviews = [];
 let cachedCategories = [];
 let cachedViews = 0;
+let cachedDiscount = 10;
 
 let productsLoaded = false;
 let ordersLoaded = false;
@@ -466,10 +467,12 @@ try {
                     }
                 }
                 cachedViews = 432;
+                cachedDiscount = 10;
                 analyticsLoaded = true;
                 checkReady();
             } else {
                 cachedViews = snapshot.data().views || 0;
+                cachedDiscount = snapshot.data().discount !== undefined ? Number(snapshot.data().discount) : 10;
                 window.dispatchEvent(new Event('db_analytics_updated'));
                 analyticsLoaded = true;
                 checkReady();
@@ -477,17 +480,20 @@ try {
         }, error => {
             console.error("Analytics subscription error: ", error);
             cachedViews = 432;
+            cachedDiscount = 10;
             analyticsLoaded = true;
             checkReady();
         });
     } else {
         cachedViews = 432;
+        cachedDiscount = 10;
         analyticsLoaded = true;
         checkReady();
     }
 } catch (err) {
     console.error("Analytics listener initialization failed:", err);
     cachedViews = 432;
+    cachedDiscount = 10;
     analyticsLoaded = true;
     checkReady();
 }
@@ -692,6 +698,28 @@ const db = {
 
     getViews() {
         return cachedViews;
+    },
+
+    getDiscount() {
+        const localDiscount = localStorage.getItem('12degrees_local_discount');
+        if (localDiscount !== null) {
+            return Number(localDiscount);
+        }
+        return cachedDiscount;
+    },
+
+    async saveDiscount(percent) {
+        try {
+            await updateDoc(doc(firestoreDb, "analytics", "storefront"), { discount: Number(percent) });
+        } catch (err) {
+            if (err.code === 'permission-denied' || err.message.includes('permission')) {
+                console.warn("Storing discount locally (Firestore write denied):", err.message);
+                localStorage.setItem('12degrees_local_discount', String(percent));
+                window.dispatchEvent(new Event('db_analytics_updated'));
+            } else {
+                throw err;
+            }
+        }
     },
 
     getReviews() {

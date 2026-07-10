@@ -13,8 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn("⚠️ Firebase (db.js) failed to load. Initializing local offline database fallback...");
         
         let localProducts = [
-            { id: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', category: '1', price: 18500, stock: 15, badge: 'In Stock', rating: 4.8, description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop' },
-            { id: 'p2', name: 'Cerave Daily Moisturizing Lotion', category: '2', price: 12000, stock: 20, badge: 'In Stock', rating: 4.7, description: 'Developed with dermatologists, CeraVe Daily Moisturizing Lotion has a unique, lightweight formula that provides 24-hour hydration.', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop' }
+            { id: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', category: '1', price: 18500, stock: 15, badge: 'In Stock', rating: 4.8, description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop', discount: 15 },
+            { id: 'p2', name: 'Cerave Daily Moisturizing Lotion', category: '2', price: 12000, stock: 20, badge: 'In Stock', rating: 4.7, description: 'Developed with dermatologists, CeraVe Daily Moisturizing Lotion has a unique, lightweight formula that provides 24-hour hydration.', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop', discount: 0 }
         ];
         let localOrders = [
             { id: 'ORD-4321', date: new Date().toISOString(), customerName: 'Dika Dera', customerPhone: '09029819153', customerEmail: 'dika@12degrees.store', total: 30500, status: 'completed', items: [{ productId: 'p1', quantity: 1, price: 18500 }] }
@@ -56,6 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.dispatchEvent(new Event('db_orders_updated'));
             },
             getViews() { return 432; },
+            getDiscount() {
+                return Number(localStorage.getItem('12degrees_local_discount') || 10);
+            },
+            async saveDiscount(percent) {
+                localStorage.setItem('12degrees_local_discount', String(percent));
+                window.dispatchEvent(new Event('db_analytics_updated'));
+            },
             getReviews() { return localReviews; },
             getCategories() { return localCategories; },
             async saveCategory(c) {
@@ -171,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const productModalTitle    = document.getElementById('product-modal-title');
     const prodImgInput         = document.getElementById('prod-img');
     const prodImgFileInput     = document.getElementById('prod-img-file');
+    const prodDiscountInput    = document.getElementById('prod-discount');
     const formImgPreview       = document.getElementById('form-img-preview');
     const formImgPreviewPlaceholder = document.getElementById('form-img-preview-placeholder');
 
@@ -183,6 +191,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const topSellingTableBody = document.getElementById('top-selling-table-body');
     const resetDbBtn          = document.getElementById('reset-db-btn');
+    const storeDiscountForm   = document.getElementById('store-discount-form');
+    const discountPercentageInput = document.getElementById('discount-percentage-input');
 
     // Customers directory DOM references
     const customersTableBody    = document.getElementById('customers-table-body');
@@ -472,6 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTopSellingTable();
         initCharts();
 
+        if (discountPercentageInput) {
+            discountPercentageInput.value = window.storeDb.getDiscount();
+        }
+
         window.addEventListener('db_products_updated', () => {
             products = window.storeDb.getProducts();
             renderProductsTable();
@@ -491,6 +505,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.addEventListener('db_analytics_updated', () => {
             updateMetrics();
+            if (discountPercentageInput) {
+                discountPercentageInput.value = window.storeDb.getDiscount();
+            }
         });
 
         window.addEventListener('db_reviews_updated', () => {
@@ -575,7 +592,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </td>
                 <td>${formatCategory(p.category)}</td>
-                <td><strong>₦ ${formatMoney(p.price)}</strong></td>
+                <td>
+                    <strong>₦ ${formatMoney(p.price)}</strong>
+                    ${p.discount ? `<br><span style="font-size:11px;color:var(--admin-primary);font-weight:600;">-${p.discount}% Off</span>` : ''}
+                </td>
                 <td>${stockBadge}</td>
                 <td><strong>${p.stock} units</strong></td>
                 <td>${p.badge ? `<span class="badge" style="background:#e2e8f0;color:#475569">${p.badge}</span>` : '<span style="color:#cbd5e1">—</span>'}</td>
@@ -628,6 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('prod-desc').value        = p.description;
             document.getElementById('prod-stock').value       = p.stock;
             document.getElementById('prod-badge').value       = p.badge || '';
+            if (prodDiscountInput) prodDiscountInput.value    = p.discount !== undefined ? p.discount : '';
             document.getElementById('prod-show-featured').checked = p.showInFeatured || false;
             prodImgInput.value = p.image;
             formImgPreview.src = p.image;
@@ -725,6 +746,14 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.disabled = true;
         btn.textContent = 'Saving product…';
 
+        const discountVal = prodDiscountInput && prodDiscountInput.value.trim() !== '' ? parseInt(prodDiscountInput.value, 10) : 0;
+        if (isNaN(discountVal) || discountVal < 0 || discountVal > 100) {
+            await showAlert('Individual discount must be a valid percentage between 0 and 100.', 'Invalid Discount');
+            btn.disabled = false;
+            btn.innerHTML = orig;
+            return;
+        }
+
         const id   = document.getElementById('form-product-id').value;
         const obj  = {
             id:          id || 'p' + Date.now().toString().slice(-6),
@@ -733,6 +762,7 @@ document.addEventListener('DOMContentLoaded', () => {
             price:       parseInt(document.getElementById('prod-price').value),
             description: document.getElementById('prod-desc').value.trim(),
             stock:       parseInt(document.getElementById('prod-stock').value),
+            discount:    discountVal,
             badge:       document.getElementById('prod-badge').value,
             showInFeatured: document.getElementById('prod-show-featured').checked,
             image:       imageUrl,
@@ -1285,6 +1315,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>${p.stock} left</strong></td>
                 <td><span style="color:var(--gold);font-size:15px;margin-right:4px">★</span><strong>${p.rating.toFixed(1)}</strong></td>`;
             topSellingTableBody.appendChild(tr);
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // DISCOUNT SETTINGS SUBMIT
+    // ══════════════════════════════════════════════════════════════════════════
+    if (storeDiscountForm) {
+        storeDiscountForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pct = parseInt(discountPercentageInput.value, 10);
+            if (isNaN(pct) || pct < 0 || pct > 100) {
+                await showAlert('Please enter a valid percentage between 0 and 100.', 'Invalid Input');
+                return;
+            }
+
+            const btn = storeDiscountForm.querySelector('button[type="submit"]');
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            try {
+                await window.storeDb.saveDiscount(pct);
+                await showAlert(`Storefront discount updated successfully to ${pct}%!`, 'Success');
+            } catch (err) {
+                console.error("Failed to save discount:", err);
+                await showAlert('Error updating discount: ' + err.message, 'Error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
         });
     }
 

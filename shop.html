@@ -12,6 +12,59 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         rel="stylesheet">
+    <style>
+        /* Inline critical CSS for preloader to prevent white screen delay */
+        .preloader {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: #ffffff;
+            z-index: 999999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+        .preloader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+        .preloader-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .preloader-logo {
+            height: 75px;
+            width: auto;
+            object-fit: contain;
+            animation: preloader-pulse 1.8s infinite ease-in-out;
+        }
+        .preloader-spinner {
+            width: 36px; height: 36px;
+            border: 3px solid rgba(0, 0, 0, 0.05);
+            border-radius: 50%;
+            border-top-color: #e60012;
+            animation: preloader-spin 1s linear infinite;
+        }
+        @keyframes preloader-spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes preloader-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.05); opacity: 1; }
+        }
+        @media (prefers-color-scheme: dark) {
+            .preloader { background-color: #09090b !important; }
+            .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+        }
+        body.dark-mode .preloader { background-color: #09090b !important; }
+        body.dark-mode .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+    </style>
+
     <link rel="stylesheet" href="css/style.css?v=1.2">
     <link rel="icon" type="image/png" href="images/logo.png">
 
@@ -273,7 +326,7 @@
                 <span id="cart-subtotal-price" style="font-weight: 500; font-size: 15px;">₦ 0</span>
             </div>
             <div class="cart-summary-row" id="cart-discount-row" style="display:none; color: var(--brand-teal);">
-                <span class="cart-total-label" style="color: var(--brand-teal);">10% Launch Discount</span>
+                <span class="cart-total-label" style="color: var(--brand-teal);"><span class="discount-label-pct">10% Launch Discount</span></span>
                 <span id="cart-discount-val" style="font-weight: 600; font-size: 15px;">-₦ 0</span>
             </div>
             <div class="cart-summary-row" style="margin-top: 8px; border-top: 1px solid var(--border); padding-top: 8px;">
@@ -353,7 +406,7 @@
                             <span id="checkout-subtotal-val" style="font-size: 13.5px; font-weight: 500;">₦ 0</span>
                         </div>
                         <div class="order-summary-row" id="checkout-discount-row" style="margin-top: 6px; color: var(--brand-teal); font-weight: 600; font-size: 13.5px;">
-                            <span>10% Launch Discount</span>
+                            <span><span class="discount-label-pct-plain">10% Launch Discount</span></span>
                             <span id="checkout-discount-val">-₦ 0</span>
                         </div>
                     </div>
