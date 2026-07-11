@@ -454,11 +454,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Filter by showInFeatured flag (marked by admin) and category, slice max 9
         let featured = products.filter(p => p.showInFeatured === true && (activeCat === 'all' || p.category === activeCat));
         
-        // Fallback to top-rated if admin hasn't marked any products yet
-        if (featured.length === 0) {
-            featured = products
-                .filter(p => activeCat === 'all' || p.category === activeCat)
+        // If we have fewer than 9 featured products, fill the rest with top-rated products in that category
+        if (featured.length < 9) {
+            const featuredIds = new Set(featured.map(p => p.id));
+            const fillProducts = products
+                .filter(p => !featuredIds.has(p.id) && (activeCat === 'all' || p.category === activeCat))
                 .sort((a, b) => (b.rating || 0) - (a.rating || 0));
+            featured = [...featured, ...fillProducts];
         }
 
         featured = featured.slice(0, 9);

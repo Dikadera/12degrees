@@ -535,6 +535,7 @@ const db = {
 
     getProducts() {
         const localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+        const deletedProducts = JSON.parse(localStorage.getItem('12degrees_deleted_products') || '[]');
         const merged = [...cachedProducts];
         localProducts.forEach(localProd => {
             const idx = merged.findIndex(p => p.id === localProd.id);
@@ -544,12 +545,20 @@ const db = {
                 merged.push(localProd);
             }
         });
-        return merged;
+        return merged.filter(p => !deletedProducts.includes(p.id));
     },
 
     async saveProduct(product) {
+        let deletedProducts = JSON.parse(localStorage.getItem('12degrees_deleted_products') || '[]');
+        if (deletedProducts.includes(product.id)) {
+            deletedProducts = deletedProducts.filter(id => id !== product.id);
+            localStorage.setItem('12degrees_deleted_products', JSON.stringify(deletedProducts));
+        }
         try {
             await setDoc(doc(firestoreDb, "products", product.id), product);
+            let localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+            localProducts = localProducts.filter(p => p.id !== product.id);
+            localStorage.setItem('12degrees_local_products', JSON.stringify(localProducts));
         } catch (err) {
             if (err.code === 'permission-denied' || err.message.includes('permission')) {
                 console.warn("Storing product locally (Firestore write denied):", err.message);
@@ -571,12 +580,24 @@ const db = {
     async deleteProduct(productId) {
         try {
             await deleteDoc(doc(firestoreDb, "products", productId));
+            let localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
+            localProducts = localProducts.filter(p => p.id !== productId);
+            localStorage.setItem('12degrees_local_products', JSON.stringify(localProducts));
+            let deletedProducts = JSON.parse(localStorage.getItem('12degrees_deleted_products') || '[]');
+            deletedProducts = deletedProducts.filter(id => id !== productId);
+            localStorage.setItem('12degrees_deleted_products', JSON.stringify(deletedProducts));
         } catch (err) {
             if (err.code === 'permission-denied' || err.message.includes('permission')) {
                 console.warn("Deleting product locally (Firestore write denied):", err.message);
                 let localProducts = JSON.parse(localStorage.getItem('12degrees_local_products') || '[]');
                 localProducts = localProducts.filter(p => p.id !== productId);
                 localStorage.setItem('12degrees_local_products', JSON.stringify(localProducts));
+                
+                const deletedProducts = JSON.parse(localStorage.getItem('12degrees_deleted_products') || '[]');
+                if (!deletedProducts.includes(productId)) {
+                    deletedProducts.push(productId);
+                    localStorage.setItem('12degrees_deleted_products', JSON.stringify(deletedProducts));
+                }
                 window.dispatchEvent(new Event('db_products_updated'));
             } else {
                 throw err;
@@ -586,6 +607,7 @@ const db = {
 
     getCategories() {
         const localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+        const deletedCategories = JSON.parse(localStorage.getItem('12degrees_deleted_categories') || '[]');
         const merged = [...cachedCategories];
         localCategories.forEach(localCat => {
             const idx = merged.findIndex(c => c.id === localCat.id);
@@ -595,12 +617,20 @@ const db = {
                 merged.push(localCat);
             }
         });
-        return merged;
+        return merged.filter(c => !deletedCategories.includes(c.id));
     },
 
     async saveCategory(category) {
+        let deletedCategories = JSON.parse(localStorage.getItem('12degrees_deleted_categories') || '[]');
+        if (deletedCategories.includes(category.id)) {
+            deletedCategories = deletedCategories.filter(id => id !== category.id);
+            localStorage.setItem('12degrees_deleted_categories', JSON.stringify(deletedCategories));
+        }
         try {
             await setDoc(doc(firestoreDb, "categories", category.id), category);
+            let localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+            localCategories = localCategories.filter(c => c.id !== category.id);
+            localStorage.setItem('12degrees_local_categories', JSON.stringify(localCategories));
         } catch (err) {
             if (err.code === 'permission-denied' || err.message.includes('permission')) {
                 console.warn("Storing category locally (Firestore write denied):", err.message);
@@ -622,12 +652,24 @@ const db = {
     async deleteCategory(categoryId) {
         try {
             await deleteDoc(doc(firestoreDb, "categories", categoryId));
+            let localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
+            localCategories = localCategories.filter(c => c.id !== categoryId);
+            localStorage.setItem('12degrees_local_categories', JSON.stringify(localCategories));
+            let deletedCategories = JSON.parse(localStorage.getItem('12degrees_deleted_categories') || '[]');
+            deletedCategories = deletedCategories.filter(id => id !== categoryId);
+            localStorage.setItem('12degrees_deleted_categories', JSON.stringify(deletedCategories));
         } catch (err) {
             if (err.code === 'permission-denied' || err.message.includes('permission')) {
                 console.warn("Deleting category locally (Firestore write denied):", err.message);
                 let localCategories = JSON.parse(localStorage.getItem('12degrees_local_categories') || '[]');
                 localCategories = localCategories.filter(c => c.id !== categoryId);
                 localStorage.setItem('12degrees_local_categories', JSON.stringify(localCategories));
+                
+                const deletedCategories = JSON.parse(localStorage.getItem('12degrees_deleted_categories') || '[]');
+                if (!deletedCategories.includes(categoryId)) {
+                    deletedCategories.push(categoryId);
+                    localStorage.setItem('12degrees_deleted_categories', JSON.stringify(deletedCategories));
+                }
                 window.dispatchEvent(new Event('db_categories_updated'));
             } else {
                 throw err;
