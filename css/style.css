@@ -3904,6 +3904,64 @@ body.dark-mode .mist-cloud {
     .hero-pamper-glow-repeat {
         margin: -40px 0 25px;
     }
+
+    /* Force reveal-on-scroll to be visible on mobile to prevent empty pages */
+    .reveal-on-scroll {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+
+    /* Make two cards fit the screen on mobile */
+    .product-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .product-card {
+        margin-bottom: 0 !important;
+    }
+
+    .product-info {
+        padding: 12px !important;
+    }
+
+    .product-cat {
+        font-size: 9px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .product-name {
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 8px !important;
+        height: 34px !important;
+        display: -webkit-box !important;
+        -webkit-line-clamp: 2 !important;
+        -webkit-box-orient: vertical !important;
+        overflow: hidden !important;
+    }
+
+    .product-meta {
+        margin-bottom: 8px !important;
+        gap: 4px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .product-price {
+        font-size: 16px !important;
+    }
+
+    .product-rating {
+        padding: 2px 6px !important;
+        font-size: 10px !important;
+    }
+
+    .product-footer-btn {
+        padding: 8px !important;
+        font-size: 12px !important;
+        gap: 4px !important;
+    }
 }
 
 /* ─── Mobile Navigation Drawer ─── */

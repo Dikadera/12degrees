@@ -399,7 +399,14 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Filter products
             let filtered = products.filter(product => {
-                const matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+                let matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+                if (!matchesCategory && window.storeDb) {
+                    const categories = window.storeDb.getCategories();
+                    const prodCat = categories.find(c => c.id === product.category);
+                    if (prodCat && prodCat.parentId === currentCategory) {
+                        matchesCategory = true;
+                    }
+                }
                 const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
                     product.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -452,18 +459,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Filter by showInFeatured flag (marked by admin) and category, slice max 9
-        let featured = products.filter(p => p.showInFeatured === true && (activeCat === 'all' || p.category === activeCat));
+        let featured = products.filter(p => {
+            const isFeatured = p.showInFeatured === true;
+            let matchesCategory = activeCat === 'all' || p.category === activeCat;
+            if (!matchesCategory && window.storeDb) {
+                const categories = window.storeDb.getCategories();
+                const prodCat = categories.find(c => c.id === p.category);
+                if (prodCat && prodCat.parentId === activeCat) {
+                    matchesCategory = true;
+                }
+            }
+            return isFeatured && matchesCategory;
+        });
         
-        // If we have fewer than 9 featured products, fill the rest with top-rated products in that category
-        if (featured.length < 9) {
+        // If we have fewer than 12 featured products, fill the rest with top-rated products in that category
+        if (featured.length < 12) {
             const featuredIds = new Set(featured.map(p => p.id));
             const fillProducts = products
-                .filter(p => !featuredIds.has(p.id) && (activeCat === 'all' || p.category === activeCat))
+                .filter(p => {
+                    if (featuredIds.has(p.id)) return false;
+                    let matchesCategory = activeCat === 'all' || p.category === activeCat;
+                    if (!matchesCategory && window.storeDb) {
+                        const categories = window.storeDb.getCategories();
+                        const prodCat = categories.find(c => c.id === p.category);
+                        if (prodCat && prodCat.parentId === activeCat) {
+                            matchesCategory = true;
+                        }
+                    }
+                    return matchesCategory;
+                })
                 .sort((a, b) => (b.rating || 0) - (a.rating || 0));
             featured = [...featured, ...fillProducts];
         }
 
-        featured = featured.slice(0, 9);
+        featured = featured.slice(0, 12);
 
         featuredGrid.innerHTML = '';
 
@@ -561,11 +590,24 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCategoryPills() {
         const categories = window.storeDb ? window.storeDb.getCategories() : [];
 
+        // Sort categories to group subcategories under parents
+        const topLevel = categories.filter(c => !c.parentId);
+        const subCategories = categories.filter(c => c.parentId);
+        const ordered = [];
+        topLevel.forEach(p => {
+            ordered.push(p);
+            subCategories.filter(c => c.parentId === p.id).forEach(c => ordered.push(c));
+        });
+        subCategories.forEach(c => {
+            if (!ordered.some(o => o.id === c.id)) ordered.push(c);
+        });
+
         // Homepage featured filters
         if (featuredCategories) {
             let html = `<button class="category-btn active" data-cat="all">All</button>`;
-            categories.forEach(c => {
-                html += `<button class="category-btn" data-cat="${c.id}">${c.name}</button>`;
+            ordered.forEach(c => {
+                const displayName = c.parentId ? `└─ ${c.name}` : c.name;
+                html += `<button class="category-btn" data-cat="${c.id}">${displayName}</button>`;
             });
             featuredCategories.innerHTML = html;
         }
@@ -573,8 +615,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // Shop page main filters
         if (categoriesContainer) {
             let html = `<button class="category-btn active" data-category="all">All</button>`;
-            categories.forEach(c => {
-                html += `<button class="category-btn" data-category="${c.id}">${c.name}</button>`;
+            ordered.forEach(c => {
+                const displayName = c.parentId ? `└─ ${c.name}` : c.name;
+                html += `<button class="category-btn" data-category="${c.id}">${displayName}</button>`;
             });
             categoriesContainer.innerHTML = html;
         }

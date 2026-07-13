@@ -614,7 +614,7 @@
                     <input type="checkbox" id="prod-show-featured" style="width: 18px; height: 18px; cursor: pointer;">
                     <label class="form-label" for="prod-show-featured"
                         style="margin-bottom: 0; cursor: pointer; font-weight: 600; font-size: 13px;">Show in
-                        Bestsellers on Homepage (Max 9)</label>
+                        Bestsellers on Homepage (Max 12)</label>
                 </div>
 
                 <div class="form-group">
@@ -666,6 +666,13 @@
                     <label class="form-label" for="cat-title"> Title *</label>
                     <input type="text" class="form-input" id="cat-title" placeholder="e.g. Bath and Body Works"
                         required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="cat-parent">Parent Category (Optional)</label>
+                    <select class="form-select" id="cat-parent">
+                        <option value="">None (Top-Level Category)</option>
+                    </select>
                 </div>
 
                 <button type="submit" class="login-btn" id="category-form-submit-btn" style="margin-top: 10px;">Save

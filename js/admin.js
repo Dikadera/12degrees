@@ -837,9 +837,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
         list.forEach(c => {
             const row = document.createElement('tr');
+            let parentName = '';
+            if (c.parentId) {
+                const parentCat = categories.find(x => x.id === c.parentId);
+                if (parentCat) {
+                    parentName = parentCat.name;
+                }
+            }
+
+            const nameDisplay = parentName 
+                ? `<strong>${c.name}</strong><br><span style="font-size:11px;color:var(--admin-text-muted)">Sub of ${parentName}</span>`
+                : `<strong>${c.name}</strong>`;
+
             row.innerHTML = `
                 <td><strong>${c.id}</strong></td>
-                <td><strong>${c.name}</strong></td>
+                <td>${nameDisplay}</td>
                 <td><code>${escapeHtml(c.title || c.name)}</code></td>
                 <td style="text-align:right">
                     <div class="action-btns" style="justify-content:flex-end">
@@ -897,6 +909,20 @@ document.addEventListener('DOMContentLoaded', () => {
         categoryForm.reset();
         document.getElementById('cat-id').value = '';
         
+        const parentSelect = document.getElementById('cat-parent');
+        if (parentSelect) {
+            parentSelect.innerHTML = '<option value="">None (Top-Level Category)</option>';
+            const categories = window.storeDb ? window.storeDb.getCategories() : [];
+            categories.forEach(c => {
+                if (c.id !== categoryId) {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+                    parentSelect.appendChild(opt);
+                }
+            });
+        }
+
         if (categoryId) {
             const categories = window.storeDb ? window.storeDb.getCategories() : [];
             const c = categories.find(x => x.id === categoryId);
@@ -906,9 +932,15 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('cat-id').value = c.id;
             document.getElementById('cat-name').value = c.name;
             document.getElementById('cat-title').value = c.title || c.name;
+            if (parentSelect) {
+                parentSelect.value = c.parentId || '';
+            }
         } else {
             categoryModalTitle.textContent = 'Add New Category';
             document.getElementById('form-category-old-id').value = '';
+            if (parentSelect) {
+                parentSelect.value = '';
+            }
         }
         categoryModal.classList.add('open');
     }
@@ -950,13 +982,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const name = document.getElementById('cat-name').value.trim();
             const title = document.getElementById('cat-title').value.trim();
+            const parentId = document.getElementById('cat-parent') ? document.getElementById('cat-parent').value : '';
 
             const btn = categoryForm.querySelector('button[type="submit"]');
             const orig = btn.innerHTML;
             btn.disabled = true;
             btn.textContent = 'Saving category…';
 
-            const obj = { id, name, title };
+            const obj = { id, name, title, parentId };
 
             try {
                 await window.storeDb.saveCategory(obj);
@@ -977,10 +1010,23 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!select) return;
         select.innerHTML = '';
         const categories = window.storeDb ? window.storeDb.getCategories() : [];
-        categories.forEach(c => {
+
+        // Sort categories to group subcategories under parents
+        const topLevel = categories.filter(c => !c.parentId);
+        const subCategories = categories.filter(c => c.parentId);
+        const ordered = [];
+        topLevel.forEach(p => {
+            ordered.push(p);
+            subCategories.filter(c => c.parentId === p.id).forEach(c => ordered.push(c));
+        });
+        subCategories.forEach(c => {
+            if (!ordered.some(o => o.id === c.id)) ordered.push(c);
+        });
+
+        ordered.forEach(c => {
             const opt = document.createElement('option');
             opt.value = c.id;
-            opt.textContent = c.name;
+            opt.textContent = c.parentId ? `└─ ${c.name}` : c.name;
             select.appendChild(opt);
         });
     }
