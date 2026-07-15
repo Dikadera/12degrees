@@ -12,10 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!window.storeDb) {
         console.warn("⚠️ Firebase (db.js) failed to load. Initializing local offline database fallback...");
         
-        let localProducts = [
-            { id: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', category: '1', price: 18500, stock: 15, badge: 'In Stock', rating: 4.8, description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop', discount: 15 },
-            { id: 'p2', name: 'Cerave Daily Moisturizing Lotion', category: '2', price: 12000, stock: 20, badge: 'In Stock', rating: 4.7, description: 'Developed with dermatologists, CeraVe Daily Moisturizing Lotion has a unique, lightweight formula that provides 24-hour hydration.', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop', discount: 0 }
-        ];
+        let localProducts = [];
         let localOrders = [];
         let localReviews = [
             { id: 'REV-9876', productId: 'p1', reviewerName: 'Audrey Hepburn', rating: 5, comment: 'Simply stunning mist. The scent lingers beautifully!', date: new Date().toISOString() }
