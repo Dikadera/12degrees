@@ -591,7 +591,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <img src="${p.image}" alt="${p.name}" class="table-img">
                         <div>
                             <div class="table-product-name">${p.name}</div>
-                            <div style="font-size:11px;color:var(--admin-text-muted)">ID: ${p.id}</div>
+                            <div style="font-size:11px;color:var(--admin-text-muted)">ID: ${p.id}${p.size ? ` • Size: ${p.size}` : ''}</div>
                         </div>
                     </div>
                 </td>
@@ -654,6 +654,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('prod-badge').value       = p.badge || '';
             if (prodDiscountInput) prodDiscountInput.value    = p.discount !== undefined ? p.discount : '';
             document.getElementById('prod-show-featured').checked = p.showInFeatured || false;
+            
+            // Populate size fields
+            document.getElementById('prod-size-val').value    = p.sizeValue !== undefined ? p.sizeValue : '';
+            document.getElementById('prod-size-unit').value   = p.sizeUnit || '';
+
             prodImgInput.value = p.image;
             formImgPreview.src = p.image;
             formImgPreview.style.display = 'block';
@@ -661,6 +666,8 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             productModalTitle.textContent = 'Add New Product';
             document.getElementById('form-product-id').value = '';
+            document.getElementById('prod-size-val').value    = '';
+            document.getElementById('prod-size-unit').value   = '';
         }
         productModal.classList.add('open');
     }
@@ -766,6 +773,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const id   = document.getElementById('form-product-id').value;
+        const sizeVal = document.getElementById('prod-size-val').value.trim();
+        const sizeUnit = document.getElementById('prod-size-unit').value;
+        const size = sizeVal ? `${sizeVal} ${sizeUnit}` : '';
+
         const obj  = {
             id:          id || 'p' + Date.now().toString().slice(-6),
             name:        document.getElementById('prod-name').value.trim(),
@@ -777,7 +788,10 @@ document.addEventListener('DOMContentLoaded', () => {
             badge:       document.getElementById('prod-badge').value,
             showInFeatured: document.getElementById('prod-show-featured').checked,
             image:       imageUrl,
-            rating:      id ? (products.find(p => p.id === id)?.rating || 4.5) : 4.5
+            rating:      id ? (products.find(p => p.id === id)?.rating || 4.5) : 4.5,
+            sizeValue:   sizeVal ? parseFloat(sizeVal) : '',
+            sizeUnit:    sizeVal ? sizeUnit : '',
+            size:        size
         };
 
         try {

@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
             <div class="product-info">
-                <span class="product-cat">${formatCategory(product.category)}</span>
+                <span class="product-cat">${formatCategory(product.category)}${product.size ? ` • ${product.size}` : ''}</span>
                 <h3 class="product-name">${product.name}</h3>
                 <div class="product-meta">
                     <div style="display:flex; flex-direction:column; gap:2px">
@@ -945,7 +945,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemRow.innerHTML = `
                     <img src="${item.image}" alt="${item.name}" class="cart-item-img">
                     <div class="cart-item-details">
-                        <h4 class="cart-item-name">${item.name}</h4>
+                        <h4 class="cart-item-name">${item.name}${product.size ? ` <span style="font-size:11px;color:var(--ink-4);font-weight:normal;">(${product.size})</span>` : ''}</h4>
                         <div class="cart-item-price">₦ ${formatMoney(item.price)}</div>
                         <div class="cart-item-qty">
                             <button class="qty-btn dec-qty">-</button>
@@ -1169,7 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img src="${product.image}" alt="${product.name}" class="quickview-img">
                 </div>
                 <div class="quickview-info-side">
-                    <span class="product-cat">${formatCategory(product.category)}</span>
+                    <span class="product-cat">${formatCategory(product.category)}${product.size ? ` • ${product.size}` : ''}</span>
                     <h3 class="quickview-name">${product.name}</h3>
                     <div class="quickview-rating">
                         <span style="color:var(--gold); margin-right:4px;">★</span>
@@ -1184,6 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="quickview-price" style="font-size:24px; font-weight:700;">₦ ${formatMoney(product.price)}</div>
                     `}
                     <p class="quickview-desc">${product.description}</p>
+                    ${product.size ? `<div style="font-size:13px; margin-bottom: 8px;"><strong>Size / Weight:</strong> ${product.size}</div>` : ''}
                     <div style="font-size:13px; margin-bottom: 20px;">
                         <strong>Stock Availability:</strong> 
                         <span style="color:${isOutOfStock ? 'var(--primary)' : 'var(--success)'}; font-weight:600;">
@@ -1306,7 +1307,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalDiscount += (product.price - priceDetails.discountedPrice) * item.quantity;
                 orderItems.push({
                     productId: item.productId,
-                    name: item.name,
+                    name: product.size ? `${item.name} (${product.size})` : item.name,
                     price: priceDetails.discountedPrice,
                     quantity: item.quantity
                 });

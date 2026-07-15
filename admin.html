@@ -610,6 +610,23 @@
                     </div>
                 </div>
 
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="prod-size-val">Size / Weight Value</label>
+                        <input type="number" class="form-input" id="prod-size-val" min="0" step="any" placeholder="e.g. 236, 50, 1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="prod-size-unit">Unit</label>
+                        <select class="form-select" id="prod-size-unit">
+                            <option value="">No Unit</option>
+                            <option value="ml">ml</option>
+                            <option value="l">l</option>
+                            <option value="g">g</option>
+                            <option value="kg">kg</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin: 12px 0;">
                     <input type="checkbox" id="prod-show-featured" style="width: 18px; height: 18px; cursor: pointer;">
                     <label class="form-label" for="prod-show-featured"
