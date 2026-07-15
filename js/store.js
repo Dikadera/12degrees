@@ -271,8 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const flwTxId = paystackParams.get('transaction_id');
-        const flwStatus = paystackParams.get('status');
-        if (flwTxId && (flwStatus === 'successful' || paystackParams.get('gateway') === 'flutterwave')) {
+        if (flwTxId) {
             handleFlutterwaveCallback(flwTxId);
         }
 
