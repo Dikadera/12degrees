@@ -16,9 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
             { id: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', category: '1', price: 18500, stock: 15, badge: 'In Stock', rating: 4.8, description: 'A festive blend of pink prosecco, sparkling quince, crystal peonies, gilded amber and warm amaretto crème.', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?q=80&w=600&auto=format&fit=crop', discount: 15 },
             { id: 'p2', name: 'Cerave Daily Moisturizing Lotion', category: '2', price: 12000, stock: 20, badge: 'In Stock', rating: 4.7, description: 'Developed with dermatologists, CeraVe Daily Moisturizing Lotion has a unique, lightweight formula that provides 24-hour hydration.', image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=600&auto=format&fit=crop', discount: 0 }
         ];
-        let localOrders = [
-            { id: 'ORD-4321', date: new Date().toISOString(), customerName: 'Dika Dera', customerPhone: '09029819153', customerEmail: 'dika@12degrees.store', total: 30500, status: 'completed', items: [{ productId: 'p1', quantity: 1, price: 18500 }] }
-        ];
+        let localOrders = [];
         let localReviews = [
             { id: 'REV-9876', productId: 'p1', reviewerName: 'Audrey Hepburn', rating: 5, comment: 'Simply stunning mist. The scent lingers beautifully!', date: new Date().toISOString() }
         ];
@@ -53,6 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             async updateOrderStatus(id, status) {
                 const o = localOrders.find(x => x.id === id);
                 if (o) o.status = status;
+                window.dispatchEvent(new Event('db_orders_updated'));
+            },
+            async deleteOrder(id) {
+                localOrders = localOrders.filter(x => x.id !== id);
                 window.dispatchEvent(new Event('db_orders_updated'));
             },
             getViews() { return 432; },
@@ -1110,6 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>
                     <select class="status-select status-${order.status}" id="status-select-${order.id}">
                         <option value="pending"    ${order.status==='pending'    ?'selected':''}>Pending</option>
+                        <option value="paid"       ${order.status==='paid'       ?'selected':''}>Paid</option>
                         <option value="processing" ${order.status==='processing' ?'selected':''}>Processing</option>
                         <option value="completed"  ${order.status==='completed'  ?'selected':''}>Completed</option>
                     </select>
@@ -1119,6 +1122,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         <button class="action-btn view" title="View Details">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12c.18.32 2 4 9 4s8.82-3.68 9-4c-.18-.32-2-4-9-4s-8.82 3.68-9 4Z"/></svg>
                         </button>
+                        <button class="action-btn delete-order" title="Delete Order" style="color:var(--admin-primary);border-color:rgba(230,0,18,.15)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
                     </div>
                 </td>`;
 
@@ -1127,6 +1133,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 catch (err) { alert('Failed to update status.'); renderOrdersTable(); }
             });
             row.querySelector('.view').addEventListener('click', () => openOrderDetails(order.id));
+            row.querySelector('.delete-order').addEventListener('click', async () => {
+                const confirmed = await showAlert(`Are you sure you want to delete order "${order.id}"?`, 'Confirm Delete', true);
+                if (confirmed) {
+                    try {
+                        await window.storeDb.deleteOrder(order.id);
+                        await showAlert('Order deleted successfully!', 'Success');
+                    } catch (err) {
+                        await showAlert('Error deleting order: ' + err.message, 'Error');
+                    }
+                }
+            });
             ordersTableBody.appendChild(row);
         });
     }

@@ -543,17 +543,22 @@ tbody tr:hover {
     color: #f59e0b;
 }
 
-.badge.status-pending {
+.badge.status-pending, .status-select.status-pending {
     background-color: rgba(245, 158, 11, 0.1);
     color: #f59e0b;
 }
 
-.badge.status-processing {
+.badge.status-paid, .status-select.status-paid {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.badge.status-processing, .status-select.status-processing {
     background-color: rgba(59, 130, 246, 0.1);
     color: #3b82f6;
 }
 
-.badge.status-completed {
+.badge.status-completed, .status-select.status-completed {
     background-color: rgba(16, 185, 129, 0.1);
     color: #10b981;
 }

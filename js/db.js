@@ -162,49 +162,7 @@ const DEFAULT_PRODUCTS = [
     }
 ];
 
-const DEFAULT_ORDERS = [
-    {
-        id: 'ORD-1001',
-        customerName: 'Chinedu Okafor',
-        customerPhone: '08031234567',
-        address: 'Dynamo Junction, Ifite Awka, Anambra State',
-        items: [
-            { productId: 'p1', name: 'Bath & Body Works "A Thousand Wishes" Mist', price: 18500, quantity: 1 },
-            { productId: 'p3', name: 'Tree Hut Shea Sugar Scrub - Coco Colada', price: 21000, quantity: 2 }
-        ],
-        total: 60500,
-        paymentMethod: 'Bank Transfer',
-        status: 'completed',
-        date: '2026-06-05T14:32:00.000Z'
-    },
-    {
-        id: 'ORD-1002',
-        customerName: 'Amara Ezeugo',
-        customerPhone: '09012345678',
-        address: 'Hostel 3, Unizik Campus, Awka, Anambra State',
-        items: [
-            { productId: 'p2', name: 'Eos 24H Moisture Body Lotion - Coconut Waters', price: 15000, quantity: 1 },
-            { productId: 'p8', name: 'Victoria\'s Secret "Bare Vanilla" Body Mist', price: 20000, quantity: 1 }
-        ],
-        total: 35000,
-        paymentMethod: 'WhatsApp Order',
-        status: 'processing',
-        date: '2026-06-06T09:15:00.000Z'
-    },
-    {
-        id: 'ORD-1003',
-        customerName: 'Kenechukwu Ndu',
-        customerPhone: '07055566677',
-        address: 'Dongreg Plaza, Shop A4, Ifite Awka, Anambra State',
-        items: [
-            { productId: 'p5', name: 'Bio-Oil Skincare Body Oil (Multiuse)', price: 13500, quantity: 1 }
-        ],
-        total: 13500,
-        paymentMethod: 'WhatsApp Order',
-        status: 'pending',
-        date: '2026-06-07T10:45:00.000Z'
-    }
-];
+const DEFAULT_ORDERS = [];
 
 const DEFAULT_REVIEWS = [
     {
@@ -718,6 +676,11 @@ const db = {
 
     async updateOrderStatus(orderId, status) {
         await updateDoc(doc(firestoreDb, "orders", orderId), { status });
+        return true;
+    },
+
+    async deleteOrder(orderId) {
+        await deleteDoc(doc(firestoreDb, "orders", orderId));
         return true;
     },
 
