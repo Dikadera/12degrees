@@ -1097,16 +1097,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (!list.length) {
-            ordersTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--admin-text-muted)">No orders match the current filters.</td></tr>`;
+            ordersTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--admin-text-muted)">No orders match the current filters.</td></tr>`;
             return;
         }
 
         list.forEach(order => {
             const row = document.createElement('tr');
+            const itemsDisplay = (order.items || []).map(item => `
+                <div style="font-size: 13px; font-weight: 500; color: var(--admin-text); line-height: 1.4; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.name}">
+                    ${item.name} <span style="color: var(--admin-text-muted); font-size: 11px;">x${item.quantity}</span>
+                </div>
+            `).join('');
+
             row.innerHTML = `
                 <td><strong>${order.id}</strong></td>
                 <td>${formatDate(order.date)}</td>
                 <td><strong>${order.customerName}</strong><br><span style="font-size:12px;color:var(--admin-text-muted)">${order.customerPhone}</span></td>
+                <td>${itemsDisplay || '<span style="color:var(--admin-text-muted)">—</span>'}</td>
                 <td>${order.paymentMethod}</td>
                 <td><strong>₦ ${formatMoney(order.total)}</strong></td>
                 <td>
