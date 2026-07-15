@@ -1269,11 +1269,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td style="text-align:center;"><span class="badge" style="background:#e0f2fe;color:#0369a1">${c.orders.length}</span></td>
                 <td style="text-align:right;"><strong>₦ ${formatMoney(c.totalSpent)}</strong></td>
                 <td style="text-align:right;">
-                    <button class="shop-link-btn view-customer-btn" style="padding:6px 12px;font-size:12px;cursor:pointer;">Details</button>
+                    <div style="display:flex;gap:8px;justify-content:flex-end;">
+                        <button class="shop-link-btn view-customer-btn" style="padding:6px 12px;font-size:12px;cursor:pointer;">Details</button>
+                        <button class="shop-link-btn delete-customer-btn btn-danger" style="padding:6px 12px;font-size:12px;cursor:pointer;">Delete</button>
+                    </div>
                 </td>
             `;
             
             row.querySelector('.view-customer-btn').addEventListener('click', () => openCustomerModal(c));
+            row.querySelector('.delete-customer-btn').addEventListener('click', async () => {
+                const confirmed = await showAlert(`Are you sure you want to delete customer "${c.name}"? This will delete all of their (${c.orders.length}) orders from the system.`, 'Confirm Delete', true);
+                if (confirmed) {
+                    try {
+                        for (const o of c.orders) {
+                            await window.storeDb.deleteOrder(o.id);
+                        }
+                        await showAlert('Customer and associated orders deleted successfully!', 'Success');
+                    } catch (err) {
+                        await showAlert('Error deleting customer: ' + err.message, 'Error');
+                    }
+                }
+            });
             customersTableBody.appendChild(row);
         });
     }
