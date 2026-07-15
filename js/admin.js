@@ -835,7 +835,31 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        list.forEach(c => {
+        // Sort parent categories and subcategories numerically by ID
+        const topLevel = list.filter(c => !c.parentId).sort((a, b) => {
+            const numA = parseInt(a.id, 10);
+            const numB = parseInt(b.id, 10);
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return (a.id || '').localeCompare(b.id || '');
+        });
+        const subCategories = list.filter(c => c.parentId).sort((a, b) => {
+            const numA = parseInt(a.id, 10);
+            const numB = parseInt(b.id, 10);
+            if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+            return (a.id || '').localeCompare(b.id || '');
+        });
+
+        const ordered = [];
+        topLevel.forEach(p => {
+            ordered.push(p);
+            subCategories.filter(c => c.parentId === p.id).forEach(c => ordered.push(c));
+        });
+        subCategories.forEach(c => {
+            if (!ordered.some(o => o.id === c.id)) ordered.push(c);
+        });
+
+        let parentIndex = 1;
+        ordered.forEach(c => {
             const row = document.createElement('tr');
             let parentName = '';
             if (c.parentId) {
@@ -845,12 +869,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
+            // Parent categories get sequential index (1, 2, 3...), subcategories remain unnumbered
+            let indexDisplay = '';
+            if (!c.parentId) {
+                indexDisplay = `<strong>${parentIndex}</strong>`;
+                parentIndex++;
+            } else {
+                indexDisplay = ``;
+            }
+
             const nameDisplay = parentName 
-                ? `<strong>${c.name}</strong><br><span style="font-size:11px;color:var(--admin-text-muted)">Sub of ${parentName}</span>`
+                ? `<span style="padding-left: 20px; display: inline-block;">└─ <strong>${c.name}</strong></span><br><span style="padding-left: 44px; font-size:11px; color:var(--admin-text-muted); display: inline-block;">Sub of ${parentName}</span>`
                 : `<strong>${c.name}</strong>`;
 
             row.innerHTML = `
-                <td><strong>${c.id}</strong></td>
+                <td>${indexDisplay}</td>
                 <td>${nameDisplay}</td>
                 <td><code>${escapeHtml(c.title || c.name)}</code></td>
                 <td style="text-align:right">

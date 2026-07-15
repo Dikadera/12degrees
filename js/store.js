@@ -73,6 +73,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let products = [];
     let cart = JSON.parse(localStorage.getItem('12degrees_cart')) || [];
     let currentCategory = 'all';
+    let currentSubCategory = 'all';
+    let activeFeaturedSubCat = 'all';
     let searchQuery = '';
     let currentSort = 'default';
     let currentBadgeFilter = 'all';
@@ -152,15 +154,47 @@ document.addEventListener('DOMContentLoaded', () => {
         const storedCategory = urlCat || localStorage.getItem('filterCategory');
         if (storedCategory && categoriesContainer) {
             if (!urlCat) localStorage.removeItem('filterCategory');
-            currentCategory = storedCategory;
+            
+            let isSub = false;
+            let parentId = storedCategory;
+            if (window.storeDb) {
+                const categories = window.storeDb.getCategories();
+                const catInfo = categories.find(c => c.id === storedCategory);
+                if (catInfo && catInfo.parentId) {
+                    isSub = true;
+                    parentId = catInfo.parentId;
+                }
+            }
+
+            currentCategory = parentId;
+            currentSubCategory = isSub ? storedCategory : 'all';
+
             categoriesContainer.querySelectorAll('.category-btn').forEach(b => {
                 const key = b.getAttribute('data-category') || b.getAttribute('data-cat');
-                if (key === storedCategory) {
+                if (key === parentId) {
                     b.classList.add('active');
                 } else {
                     b.classList.remove('active');
                 }
             });
+            
+            updateSubcategoriesUI(parentId, 'shop');
+            
+            if (isSub) {
+                setTimeout(() => {
+                    const subContainer = document.getElementById('subcategories-container');
+                    if (subContainer) {
+                        subContainer.querySelectorAll('.subcategory-btn').forEach(b => {
+                            if (b.getAttribute('data-sub-cat') === storedCategory) {
+                                b.classList.add('active');
+                            } else {
+                                b.classList.remove('active');
+                            }
+                        });
+                    }
+                }, 100);
+            }
+
             // Smooth scroll to shop section if on shop.html
             if (urlCat) {
                 setTimeout(() => {
@@ -399,12 +433,17 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             // Filter products
             let filtered = products.filter(product => {
-                let matchesCategory = currentCategory === 'all' || product.category === currentCategory;
-                if (!matchesCategory && window.storeDb) {
-                    const categories = window.storeDb.getCategories();
-                    const prodCat = categories.find(c => c.id === product.category);
-                    if (prodCat && prodCat.parentId === currentCategory) {
-                        matchesCategory = true;
+                let matchesCategory = false;
+                if (currentSubCategory && currentSubCategory !== 'all') {
+                    matchesCategory = product.category === currentSubCategory;
+                } else {
+                    matchesCategory = currentCategory === 'all' || product.category === currentCategory;
+                    if (!matchesCategory && window.storeDb) {
+                        const categories = window.storeDb.getCategories();
+                        const prodCat = categories.find(c => c.id === product.category);
+                        if (prodCat && prodCat.parentId === currentCategory) {
+                            matchesCategory = true;
+                        }
                     }
                 }
                 const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -458,15 +497,20 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeBtn) activeCat = activeBtn.getAttribute('data-cat') || 'all';
         }
 
-        // Filter by showInFeatured flag (marked by admin) and category, slice max 9
+        // Filter by showInFeatured flag (marked by admin) and category, slice max 12
         let featured = products.filter(p => {
             const isFeatured = p.showInFeatured === true;
-            let matchesCategory = activeCat === 'all' || p.category === activeCat;
-            if (!matchesCategory && window.storeDb) {
-                const categories = window.storeDb.getCategories();
-                const prodCat = categories.find(c => c.id === p.category);
-                if (prodCat && prodCat.parentId === activeCat) {
-                    matchesCategory = true;
+            let matchesCategory = false;
+            if (activeFeaturedSubCat && activeFeaturedSubCat !== 'all') {
+                matchesCategory = p.category === activeFeaturedSubCat;
+            } else {
+                matchesCategory = activeCat === 'all' || p.category === activeCat;
+                if (!matchesCategory && window.storeDb) {
+                    const categories = window.storeDb.getCategories();
+                    const prodCat = categories.find(c => c.id === p.category);
+                    if (prodCat && prodCat.parentId === activeCat) {
+                        matchesCategory = true;
+                    }
                 }
             }
             return isFeatured && matchesCategory;
@@ -478,12 +522,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const fillProducts = products
                 .filter(p => {
                     if (featuredIds.has(p.id)) return false;
-                    let matchesCategory = activeCat === 'all' || p.category === activeCat;
-                    if (!matchesCategory && window.storeDb) {
-                        const categories = window.storeDb.getCategories();
-                        const prodCat = categories.find(c => c.id === p.category);
-                        if (prodCat && prodCat.parentId === activeCat) {
-                            matchesCategory = true;
+                    let matchesCategory = false;
+                    if (activeFeaturedSubCat && activeFeaturedSubCat !== 'all') {
+                        matchesCategory = p.category === activeFeaturedSubCat;
+                    } else {
+                        matchesCategory = activeCat === 'all' || p.category === activeCat;
+                        if (!matchesCategory && window.storeDb) {
+                            const categories = window.storeDb.getCategories();
+                            const prodCat = categories.find(c => c.id === p.category);
+                            if (prodCat && prodCat.parentId === activeCat) {
+                                matchesCategory = true;
+                            }
                         }
                     }
                     return matchesCategory;
@@ -582,32 +631,67 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!btn) return;
                 featuredCategories.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
+                
+                const catId = btn.getAttribute('data-cat') || 'all';
+                activeFeaturedSubCat = 'all'; // Reset subcategory when primary category is changed
+                updateSubcategoriesUI(catId, 'home');
+
                 renderFeaturedProducts();
             });
         }
     }
 
+    function updateSubcategoriesUI(parentId, page) {
+        const categories = window.storeDb ? window.storeDb.getCategories() : [];
+        const subCats = categories.filter(c => c.parentId === parentId);
+        
+        const containerId = page === 'home' ? 'featured-subcategories' : 'subcategories-container';
+        const subContainer = document.getElementById(containerId);
+        if (!subContainer) return;
+
+        if (parentId === 'all' || subCats.length === 0) {
+            subContainer.style.display = 'none';
+            subContainer.innerHTML = '';
+            return;
+        }
+
+        const parentCat = categories.find(c => c.id === parentId);
+        const parentName = parentCat ? parentCat.name : '';
+
+        let html = `<button class="subcategory-btn active" data-sub-cat="all">All ${parentName}</button>`;
+        subCats.forEach(sc => {
+            html += `<button class="subcategory-btn" data-sub-cat="${sc.id}">${sc.name}</button>`;
+        });
+        subContainer.innerHTML = html;
+        subContainer.style.display = 'flex';
+
+        // Wire up subcategory click handlers
+        subContainer.querySelectorAll('.subcategory-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                subContainer.querySelectorAll('.subcategory-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                const subId = btn.getAttribute('data-sub-cat');
+                if (page === 'home') {
+                    activeFeaturedSubCat = subId;
+                    renderFeaturedProducts();
+                } else {
+                    currentSubCategory = subId;
+                    renderProducts();
+                }
+            });
+        });
+    }
+
     function renderCategoryPills() {
         const categories = window.storeDb ? window.storeDb.getCategories() : [];
-
-        // Sort categories to group subcategories under parents
         const topLevel = categories.filter(c => !c.parentId);
-        const subCategories = categories.filter(c => c.parentId);
-        const ordered = [];
-        topLevel.forEach(p => {
-            ordered.push(p);
-            subCategories.filter(c => c.parentId === p.id).forEach(c => ordered.push(c));
-        });
-        subCategories.forEach(c => {
-            if (!ordered.some(o => o.id === c.id)) ordered.push(c);
-        });
 
         // Homepage featured filters
         if (featuredCategories) {
             let html = `<button class="category-btn active" data-cat="all">All</button>`;
-            ordered.forEach(c => {
-                const displayName = c.parentId ? `└─ ${c.name}` : c.name;
-                html += `<button class="category-btn" data-cat="${c.id}">${displayName}</button>`;
+            topLevel.forEach(c => {
+                html += `<button class="category-btn" data-cat="${c.id}">${c.name}</button>`;
             });
             featuredCategories.innerHTML = html;
         }
@@ -615,9 +699,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Shop page main filters
         if (categoriesContainer) {
             let html = `<button class="category-btn active" data-category="all">All</button>`;
-            ordered.forEach(c => {
-                const displayName = c.parentId ? `└─ ${c.name}` : c.name;
-                html += `<button class="category-btn" data-category="${c.id}">${displayName}</button>`;
+            topLevel.forEach(c => {
+                html += `<button class="category-btn" data-category="${c.id}">${c.name}</button>`;
             });
             categoriesContainer.innerHTML = html;
         }
@@ -629,8 +712,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const categories = window.storeDb ? window.storeDb.getCategories() : [];
         if (currentCategory !== 'all' && !categories.some(c => c.id === currentCategory)) {
             currentCategory = 'all';
+            currentSubCategory = 'all';
             updateShopHero('all');
         }
+        
+        let activeCat = 'all';
+        if (featuredCategories) {
+            const activeBtn = featuredCategories.querySelector('.category-btn.active');
+            if (activeBtn) activeCat = activeBtn.getAttribute('data-cat') || 'all';
+        }
+        
+        updateSubcategoriesUI(currentCategory, 'shop');
+        updateSubcategoriesUI(activeCat, 'home');
+        
         renderProducts();
         renderFeaturedProducts();
     });
@@ -1344,6 +1438,9 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.classList.add('active');
 
             currentCategory = btn.getAttribute('data-category');
+            currentSubCategory = 'all'; // Reset subcategory when primary category is changed
+            updateSubcategoriesUI(currentCategory, 'shop');
+            
             updateShopHero(currentCategory);
             renderProducts();
         });
@@ -1380,6 +1477,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetBtn = categoriesContainer.querySelector(`.category-btn[data-category="${categoryKey}"]`);
             if (targetBtn) {
                 targetBtn.click();
+            } else if (window.storeDb) {
+                const categories = window.storeDb.getCategories();
+                const subCat = categories.find(c => c.id === categoryKey);
+                if (subCat && subCat.parentId) {
+                    const parentBtn = categoriesContainer.querySelector(`.category-btn[data-category="${subCat.parentId}"]`);
+                    if (parentBtn) {
+                        parentBtn.click();
+                        setTimeout(() => {
+                            const subContainer = document.getElementById('subcategories-container');
+                            if (subContainer) {
+                                const subBtn = subContainer.querySelector(`.subcategory-btn[data-sub-cat="${categoryKey}"]`);
+                                if (subBtn) subBtn.click();
+                            }
+                        }, 100);
+                    }
+                }
             }
         } else {
             localStorage.setItem('filterCategory', categoryKey);
