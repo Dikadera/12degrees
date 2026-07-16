@@ -209,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('🎨 Calling renderProducts & renderFeatured...');
         renderProducts();
         renderFeaturedProducts();
+        renderSnatchCarousels();
         updateCartUI();
         initTheme();
         initQuiz();
@@ -232,6 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             products = window.storeDb.getProducts();
             renderProducts();
             renderFeaturedProducts();
+            renderSnatchCarousels();
         });
 
         window.addEventListener('db_reviews_updated', () => {
@@ -638,6 +640,69 @@ document.addEventListener('DOMContentLoaded', () => {
                 renderFeaturedProducts();
             });
         }
+    }
+
+    // ─── Designed to Snatch — Dual Auto-Scroll Marquee Carousels ───
+    function renderSnatchCarousels() {
+        const trackRight = document.getElementById('snatch-track-right');
+        const trackLeft  = document.getElementById('snatch-track-left');
+        if (!trackRight && !trackLeft) return;
+
+        // Pick products for display: preferably a mix of badge, in-stock, and all products
+        const poolSize = 12;
+        let pool = products.filter(p => p.stock > 0);
+        if (pool.length < 6) pool = products; // fallback to all if stock data is sparse
+
+        // Shuffle to keep it fresh and limit to poolSize
+        const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, poolSize);
+        // Ensure we have at least a minimum set for display
+        const displaySet = shuffled.length > 0 ? shuffled : products.slice(0, poolSize);
+
+        if (displaySet.length === 0) return;
+
+        function buildCard(product) {
+            const priceDetails = getProductPriceDetails(product);
+            const card = document.createElement('div');
+            card.className = 'snatch-card';
+            card.setAttribute('data-id', product.id);
+
+            const badgeHTML = product.badge
+                ? `<span class="snatch-card-badge">${product.badge}</span>`
+                : '';
+
+            const priceHTML = priceDetails.hasDiscount
+                ? `<span style="color:var(--red)">₦${formatMoney(priceDetails.discountedPrice)}</span><span class="original">₦${formatMoney(product.price)}</span>`
+                : `<span>₦${formatMoney(product.price)}</span>`;
+
+            card.innerHTML = `
+                ${badgeHTML}
+                <img src="${product.image}" alt="${product.name}" class="snatch-card-img" loading="lazy">
+                <div class="snatch-card-body">
+                    <span class="snatch-card-cat">${formatCategory(product.category)}</span>
+                    <div class="snatch-card-name">${product.name}</div>
+                    <div class="snatch-card-price">${priceHTML}</div>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                if (quickviewModal) openQuickView(product.id);
+            });
+            return card;
+        }
+
+        function populateTrack(track, items) {
+            if (!track) return;
+            track.innerHTML = '';
+            // Append twice for seamless loop
+            [...items, ...items].forEach(p => track.appendChild(buildCard(p)));
+        }
+
+        // Row 1 (right) — use displaySet as-is
+        populateTrack(trackRight, displaySet);
+
+        // Row 2 (left) — use a reversed/differently ordered set for visual variety
+        const altSet = [...displaySet].reverse();
+        populateTrack(trackLeft, altSet);
     }
 
     function updateSubcategoriesUI(parentId, page) {

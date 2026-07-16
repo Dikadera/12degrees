@@ -13,14 +13,17 @@
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
         rel="stylesheet">
     <!-- Preload first hero image to prevent blank screen flash -->
-    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop">
+    <link rel="preload" as="image"
+        href="https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop">
 
     <style>
         /* Inline critical CSS for preloader to prevent white screen delay */
         .preloader {
             position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             background-color: #ffffff;
             z-index: 999999;
             display: flex;
@@ -30,42 +33,74 @@
             opacity: 1;
             visibility: visible;
         }
+
         .preloader.fade-out {
             opacity: 0;
             visibility: hidden;
         }
+
         .preloader-content {
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 20px;
         }
+
         .preloader-logo {
             height: 75px;
             width: auto;
             object-fit: contain;
             animation: preloader-pulse 1.8s infinite ease-in-out;
         }
+
         .preloader-spinner {
-            width: 36px; height: 36px;
+            width: 36px;
+            height: 36px;
             border: 3px solid rgba(0, 0, 0, 0.05);
             border-radius: 50%;
             border-top-color: #e60012;
             animation: preloader-spin 1s linear infinite;
         }
+
         @keyframes preloader-spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
+
         @keyframes preloader-pulse {
-            0%, 100% { transform: scale(1); opacity: 0.85; }
-            50% { transform: scale(1.05); opacity: 1; }
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.85;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
         }
+
         @media (prefers-color-scheme: dark) {
-            .preloader { background-color: #09090b !important; }
-            .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+            .preloader {
+                background-color: #09090b !important;
+            }
+
+            .preloader-spinner {
+                border-color: rgba(255, 255, 255, 0.1);
+                border-top-color: #e60012;
+            }
         }
-        body.dark-mode .preloader { background-color: #09090b !important; }
-        body.dark-mode .preloader-spinner { border-color: rgba(255, 255, 255, 0.1); border-top-color: #e60012; }
+
+        body.dark-mode .preloader {
+            background-color: #09090b !important;
+        }
+
+        body.dark-mode .preloader-spinner {
+            border-color: rgba(255, 255, 255, 0.1);
+            border-top-color: #e60012;
+        }
     </style>
 
     <link rel="stylesheet" href="css/style.css?v=1.2">
@@ -113,7 +148,7 @@
         // Track critical hero image load so screen is never blank when loader fades
         const heroImg = new Image();
         heroImg.src = "https://images.unsplash.com/photo-1612817288484-6f916006741a?q=90&w=1920&auto=format&fit=crop";
-        
+
         let loaded = false;
         const onAssetLoad = () => {
             if (loaded) return;
@@ -124,7 +159,7 @@
         heroImg.onload = onAssetLoad;
         heroImg.onerror = onAssetLoad; // hide even if image fails
         window.addEventListener('load', onAssetLoad);
-        
+
         // Fallback: maximum 2.8s wait
         setTimeout(onAssetLoad, 2800);
     </script>
@@ -317,7 +352,8 @@
             </div>
 
             <!-- Subcategory Pills -->
-            <div class="category-scroll subcategory-scroll" id="featured-subcategories" style="margin-bottom:24px; display:none;">
+            <div class="category-scroll subcategory-scroll" id="featured-subcategories"
+                style="margin-bottom:24px; display:none;">
                 <!-- Dynamically populated when parent is clicked -->
             </div>
 
@@ -340,6 +376,8 @@
             </div>
         </div>
     </section>
+
+
 
     <!-- Interactive Scent Finder Quiz Section -->
     <section class="scent-quiz-section reveal-on-scroll" id="scent-finder">
@@ -393,6 +431,34 @@
             </div>
         </div>
     </section>
+
+    <!-- ─── Designed to Snatch — Dual Auto-Scroll Carousel Section ── -->
+    <section class="snatch-section" id="snatch">
+        <div class="snatch-header container">
+            <div class="section-label">
+                <span class="label-line"></span>
+                <span class="label-text">Trending Now</span>
+            </div>
+
+            <p class="snatch-subtitle">Scroll-stopping picks flying off our shelves — grab yours before they're gone.
+            </p>
+        </div>
+
+        <!-- Row 1 — scrolls RIGHT (marquee-right) -->
+        <div class="snatch-track-wrapper">
+            <div class="snatch-track snatch-track--right" id="snatch-track-right">
+                <!-- Populated by store.js -->
+            </div>
+        </div>
+
+        <!-- Row 2 — scrolls LEFT (marquee-left) -->
+        <div class="snatch-track-wrapper">
+            <div class="snatch-track snatch-track--left" id="snatch-track-left">
+                <!-- Populated by store.js -->
+            </div>
+        </div>
+    </section>
+
 
     <!-- ─── Customer Reviews Section ────────────────────────────── -->
     <section class="reviews-section-full reveal-on-scroll" id="reviews">
@@ -678,7 +744,8 @@
                 <span id="cart-subtotal-price" style="font-weight: 500; font-size: 15px;">₦ 0</span>
             </div>
             <div class="cart-summary-row" id="cart-discount-row" style="display:none; color: var(--brand-teal);">
-                <span class="cart-total-label" style="color: var(--brand-teal);"><span class="discount-label-pct">10% Launch Discount</span></span>
+                <span class="cart-total-label" style="color: var(--brand-teal);"><span class="discount-label-pct">10%
+                        Launch Discount</span></span>
                 <span id="cart-discount-val" style="font-weight: 600; font-size: 15px;">-₦ 0</span>
             </div>
             <div class="cart-summary-row"
