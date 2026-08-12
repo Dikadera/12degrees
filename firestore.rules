@@ -1,0 +1,48 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function: Check if the user is an authenticated Admin
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'admin@12degrees.store' ||
+        (request.auth.token.admin == true)
+      );
+    }
+
+    // 1. PRODUCTS: Storefront visitors can read. Only Admin can create/update. Deletion is restricted.
+    match /products/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin(); // Change to `if false;` if you want to completely block deletion!
+    }
+
+    // 2. CATEGORIES: Public read. Only Admin can create/update/delete.
+    match /categories/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin(); // Change to `if false;` if you want to completely block deletion!
+    }
+
+    // 3. REVIEWS: Public read. Anyone can submit a review. Only Admin can modify/delete.
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin();
+    }
+
+    // 4. ORDERS: Customers can create orders. Only Admin can read, update status. PREVENT DELETION!
+    match /orders/{id} {
+      allow create: if true;
+      allow read, update: if isAdmin();
+      allow delete: if false; // Protect orders from accidental or malicious deletion
+    }
+
+    // 5. ANALYTICS: Only Admin can access. Storefront page view increments allowed. PREVENT DELETION!
+    match /analytics/{id} {
+      allow read: if isAdmin();
+      allow update: if true; // Allow incrementing page views from storefront
+      allow create, delete: if false; // Block deletion of storefront analytics document
+    }
+  }
+}

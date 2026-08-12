@@ -8,8 +8,8 @@ const firebaseConfig = {
   projectId: "degree-ce3ad",
   storageBucket: "degree-ce3ad.firebasestorage.app",
   messagingSenderId: "277688141959",
-  appId: "1:277688141959:web:6c771f263929258b0c9022",
-  measurementId: "G-P8DJ2ZFYC0"
+  appId: "1:277688141959:web:b50c878dff0ae2bb0c9022",
+  measurementId: "G-6YYN807FR8"
 };
 
 const app = initializeApp(firebaseConfig);
