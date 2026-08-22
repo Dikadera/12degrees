@@ -2,6 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import https from 'https';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,12 +62,29 @@ const server = http.createServer((req, res) => {
 
     const pathname = req.url.split('?')[0].split('#')[0];
 
+    if (pathname.startsWith('/api/db/')) {
+        const dbPath = req.url.replace('/api/db/', '');
+        console.log(`Proxy Headers for ${dbPath}: ` + (req.headers['authorization'] ? 'Token present' : 'No Token'));
+        fetchFromFirestore(dbPath, req.headers)
+            .then(data => {
+                res.writeHead(200, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify(data));
+            })
+            .catch(error => {
+                console.error(`❌ Firestore proxy error for ${dbPath}:`, error.message);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ error: error.message }));
+            });
+        return;
+    }
+
     if (pathname === '/api/config') {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({
             emailjsPublicKey: process.env.EMAILJS_PUBLIC_KEY || '',
             emailjsServiceId: process.env.EMAILJS_SERVICE_ID || '',
-            emailjsTemplateId: process.env.EMAILJS_TEMPLATE_ID || ''
+            emailjsTemplateId: process.env.EMAILJS_TEMPLATE_ID || '',
+            emailjsShippedTemplateId: process.env.EMAILJS_SHIPPED_TEMPLATE_ID || ''
         }));
         return;
     }
@@ -92,6 +110,39 @@ async function handleApiRoute(req, res) {
     const apiHandlerPath = pathToFileURL(path.join(__dirname, 'api', 'verify-payment.js')).href;
     const { default: handler } = await import(apiHandlerPath);
     handler(req, res);
+}
+
+function fetchFromFirestore(path, clientHeaders) {
+    return new Promise((resolve, reject) => {
+        const headers = {};
+        if (clientHeaders && clientHeaders['authorization']) {
+            headers['Authorization'] = clientHeaders['authorization'];
+        }
+        const options = {
+            hostname: 'firestore.googleapis.com',
+            port: 443,
+            path: `/v1/projects/degree-ce3ad/databases/(default)/documents/${path}`,
+            method: 'GET',
+            headers: headers
+        };
+        const request = https.request(options, (response) => {
+            let data = '';
+            response.on('data', chunk => { data += chunk; });
+            response.on('end', () => {
+                if (response.statusCode >= 200 && response.statusCode < 300) {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        reject(new Error('Failed to parse response'));
+                    }
+                } else {
+                    reject(new Error(`HTTP Error ${response.statusCode}: ${data}`));
+                }
+            });
+        });
+        request.on('error', reject);
+        request.end();
+    });
 }
 
 function serveStaticFile(req, res) {

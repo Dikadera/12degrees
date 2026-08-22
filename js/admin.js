@@ -45,6 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.dispatchEvent(new Event('db_orders_updated'));
                 return o;
             },
+            async addOrderWithId(id, o) {
+                const newOrder = { id, date: new Date().toISOString(), status: 'pending', ...o };
+                localOrders.push(newOrder);
+                window.dispatchEvent(new Event('db_orders_updated'));
+                return newOrder;
+            },
             async updateOrderStatus(id, status) {
                 const o = localOrders.find(x => x.id === id);
                 if (o) o.status = status;
@@ -188,6 +194,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeOrderModalBtn = document.getElementById('close-order-modal-btn');
     const orderDetailsContent = document.getElementById('order-details-content');
 
+    const failedPaymentsTableBody = document.getElementById('failed-payments-table-body');
+    const failedPaymentsSearchInput = document.getElementById('failed-payments-search-input');
+
     const topSellingTableBody = document.getElementById('top-selling-table-body');
     const resetDbBtn          = document.getElementById('reset-db-btn');
     const storeDiscountForm   = document.getElementById('store-discount-form');
@@ -229,6 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let customerSearchQuery  = '';
     let reviewSearchQuery    = '';
     let orderStatusFilter    = 'all';
+    let failedPaymentsSearchQuery = '';
     let dashboardInitialised = false;
     let salesChartInstance   = null;
     let categoryChartInstance = null;
@@ -240,6 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
         products:  { title: 'Product Inventory',     subtitle: 'Manage catalog items, prices, descriptions, and current stock sizes.' },
         categories: { title: 'Category Inventory',    subtitle: 'Manage product category classifications, custom hero titles, and subtitles.' },
         orders:    { title: 'Customer Order Logs',   subtitle: 'Monitor checkout items, payment preferences, and shipping deliveries.' },
+        'failed-payments': { title: 'Abandoned Payments Log', subtitle: 'Track and follow up with customers who initiated checkout but did not complete payment.' },
         customers: { title: 'Customers Directory',   subtitle: 'Consolidated customer information, purchase counts, and spend stats.' },
         reviews:   { title: 'Reviews Moderation',    subtitle: 'Moderate customer ratings and review comments on product catalog items.' },
         settings:  { title: 'System Configuration',  subtitle: 'Administrative actions, developer accounts, and database restores.' }
@@ -480,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProductsTable();
         renderCategoriesTable();
         renderOrdersTable();
+        renderFailedPaymentsTable();
         renderCustomersTable();
         renderReviewsTable();
         renderTopSellingTable();
@@ -501,6 +513,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('db_orders_updated', () => {
             orders = window.storeDb.getOrders();
             renderOrdersTable();
+            renderFailedPaymentsTable();
             renderCustomersTable(); // Customers are compiled from orders
             updateMetrics();
             updateCharts();
@@ -1133,7 +1146,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>`;
 
             row.querySelector(`#status-select-${order.id}`).addEventListener('change', async e => {
-                try { await window.storeDb.updateOrderStatus(order.id, e.target.value); }
+                const newStatus = e.target.value;
+                try { 
+                    await window.storeDb.updateOrderStatus(order.id, newStatus); 
+                    
+                    if (newStatus === 'completed' && order.customerEmail) {
+                        try {
+                            const configRes = await fetch('/api/config');
+                            const configData = await configRes.json();
+                            const pubKey = configData.emailjsPublicKey;
+                            const svcId = configData.emailjsServiceId;
+                            const shipTemplateId = configData.emailjsShippedTemplateId;
+
+                            if (pubKey && svcId && shipTemplateId) {
+                                console.log("✉️ Triggering Shipment Confirmation email for order:", order.id);
+                                const orderSummaryHtml = (order.items || []).map(item => `
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 12px 0; font-size: 14px; color: #334155;">${item.name}</td>
+                                        <td style="padding: 12px 0; text-align: center; font-size: 14px; color: #475569;">x${item.quantity}</td>
+                                        <td style="padding: 12px 0; text-align: right; font-size: 14px; font-weight: 600; color: #0f172a;">₦ ${formatMoney(item.price * item.quantity)}</td>
+                                    </tr>
+                                `).join('');
+
+                                fetch('https://api.emailjs.com/api/v1.0/email/send', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        service_id: svcId,
+                                        template_id: shipTemplateId,
+                                        user_id: pubKey,
+                                        template_params: {
+                                            to_email: order.customerEmail,
+                                            to_name: order.customerName,
+                                            order_id: order.id,
+                                            customer_phone: order.customerPhone,
+                                            delivery_address: order.address,
+                                            order_summary_html: orderSummaryHtml,
+                                            total_amount: `₦ ${formatMoney(order.total || 0)}`
+                                        }
+                                    })
+                                }).then(r => {
+                                    if (r.ok) console.log('✉️ Shipment confirmation email sent successfully!');
+                                    else r.text().then(t => console.error('❌ Shipment email failed:', t));
+                                }).catch(err => console.error('❌ Shipment email network error:', err));
+                            }
+                        } catch (err) {
+                            console.error('Failed to prepare shipment confirmation email:', err);
+                        }
+                    }
+                }
                 catch (err) { alert('Failed to update status.'); renderOrdersTable(); }
             });
             row.querySelector('.view').addEventListener('click', () => openOrderDetails(order.id));
@@ -1154,6 +1215,96 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (orderSearchInput)  orderSearchInput.addEventListener('input', e => { orderSearchQuery = e.target.value; renderOrdersTable(); });
     if (orderFilterStatus) orderFilterStatus.addEventListener('change', e => { orderStatusFilter = e.target.value; renderOrdersTable(); });
+
+    // ══════════════════════════════════════════════════════════════════════════
+    // ABANDONED/FAILED PAYMENTS TABLE
+    // ══════════════════════════════════════════════════════════════════════════
+    function renderFailedPaymentsTable() {
+        if (!failedPaymentsTableBody) return;
+        failedPaymentsTableBody.innerHTML = '';
+
+        const q = failedPaymentsSearchQuery.toLowerCase();
+        const list = orders.filter(o => {
+            const isFailedPayment = o.status === 'pending';
+            const okSearch = (o.customerName || '').toLowerCase().includes(q) ||
+                             (o.id || '').toLowerCase().includes(q) ||
+                             (o.customerPhone || '').includes(q);
+            return isFailedPayment && okSearch;
+        });
+
+        if (!list.length) {
+            failedPaymentsTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--admin-text-muted)">No abandoned payments recorded.</td></tr>`;
+            return;
+        }
+
+        list.forEach(order => {
+            const row = document.createElement('tr');
+            const itemsDisplay = (order.items || []).map(item => `
+                <div style="font-size: 13px; font-weight: 500; color: var(--admin-text); line-height: 1.4; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.name}">
+                    ${item.name} <span style="color: var(--admin-text-muted); font-size: 11px;">x${item.quantity}</span>
+                </div>
+            `).join('');
+
+            // Clean & format phone for WhatsApp link
+            let cleanedPhone = (order.customerPhone || '').replace(/\D/g, '');
+            if (cleanedPhone.startsWith('0')) {
+                cleanedPhone = '234' + cleanedPhone.slice(1);
+            } else if (cleanedPhone.length === 10) {
+                cleanedPhone = '234' + cleanedPhone;
+            }
+            const itemsList = (order.items || []).map(i => `${i.name} (x${i.quantity})`).join(', ');
+            const waText = `Hello ${order.customerName}, we noticed you initiated checkout for ${itemsList} (Total: ₦${formatMoney(order.total)}) on 12 Degrees but the payment wasn't completed. Let us know if you need any assistance with your order!`;
+            const waLink = `https://wa.me/${cleanedPhone}?text=${encodeURIComponent(waText)}`;
+
+            row.innerHTML = `
+                <td><strong>${order.id}</strong></td>
+                <td>${formatDate(order.date)}</td>
+                <td>
+                    <strong>${order.customerName}</strong><br>
+                    <span style="font-size:12px;color:var(--admin-text-muted)">${order.customerPhone}</span><br>
+                    <span style="font-size:11px;color:var(--admin-text-muted)">${order.customerEmail || 'No Email'}</span>
+                </td>
+                <td>${itemsDisplay || '<span style="color:var(--admin-text-muted)">—</span>'}</td>
+                <td>${order.paymentMethod || 'Unknown'}</td>
+                <td><strong>₦ ${formatMoney(order.total)}</strong></td>
+                <td style="text-align:right">
+                    <div class="action-btns" style="justify-content:flex-end; gap: 8px;">
+                        <a href="${waLink}" target="_blank" class="action-btn view" title="WhatsApp Customer" style="color: #25D366; border-color: rgba(37, 211, 102, 0.15); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: 1px solid;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                            </svg>
+                        </a>
+                        <button class="action-btn view-details" title="View Details">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M3 12c.18.32 2 4 9 4s8.82-3.68 9-4c-.18-.32-2-4-9-4s-8.82 3.68-9 4Z"/></svg>
+                        </button>
+                        <button class="action-btn delete-order" title="Delete Log" style="color:var(--admin-primary);border-color:rgba(230,0,18,.15)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                        </button>
+                    </div>
+                </td>`;
+
+            row.querySelector('.view-details').addEventListener('click', () => openOrderDetails(order.id));
+            row.querySelector('.delete-order').addEventListener('click', async () => {
+                const confirmed = await showAlert(`Are you sure you want to delete payment attempt log "${order.id}"?`, 'Confirm Delete', true);
+                if (confirmed) {
+                    try {
+                        await window.storeDb.deleteOrder(order.id);
+                        await showAlert('Log deleted successfully!', 'Success');
+                    } catch (err) {
+                        await showAlert('Error deleting log: ' + err.message, 'Error');
+                    }
+                }
+            });
+            failedPaymentsTableBody.appendChild(row);
+        });
+    }
+
+    if (failedPaymentsSearchInput) {
+        failedPaymentsSearchInput.addEventListener('input', e => {
+            failedPaymentsSearchQuery = e.target.value;
+            renderFailedPaymentsTable();
+        });
+    }
 
     function openOrderDetails(orderId) {
         const order = orders.find(o => o.id === orderId);
@@ -1648,12 +1799,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const diagAuth = document.getElementById('diag-auth');
         const diagErrors = document.getElementById('diag-errors');
 
+        // Safe stringify helper to avoid circular reference crashes in developer diagnostics panel
+        const safeStringify = (arg) => {
+            if (arg === null || arg === undefined) return String(arg);
+            if (arg instanceof Error) return arg.message || arg.stack || String(arg);
+            if (typeof arg === 'object') {
+                try { return JSON.stringify(arg); }
+                catch (e) {
+                    return arg.message || (typeof arg.toString === 'function' ? arg.toString() : '[Circular Object]');
+                }
+            }
+            return String(arg);
+        };
+
         // Capture console errors reactively
         const originalConsoleError = console.error;
         console.error = function(...args) {
             originalConsoleError.apply(console, args);
             if (diagErrors) {
-                const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+                const message = args.map(safeStringify).join(' ');
                 const errorDiv = document.createElement('div');
                 errorDiv.style.borderBottom = '1px solid #f1f5f9';
                 errorDiv.style.padding = '4px 0';
@@ -1669,7 +1833,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.warn = function(...args) {
             originalConsoleWarn.apply(console, args);
             if (diagErrors) {
-                const message = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ');
+                const message = args.map(safeStringify).join(' ');
                 const warnDiv = document.createElement('div');
                 warnDiv.style.borderBottom = '1px solid #f1f5f9';
                 warnDiv.style.padding = '4px 0';

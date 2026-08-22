@@ -1410,6 +1410,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.authorization_url) {
+                // Pre-log pending order to Firestore so we can track abandoned payments
+                const orderId = `ORD-${Date.now().toString().slice(-4)}`;
+                try {
+                    await window.storeDb.addOrderWithId(orderId, {
+                        customerName: name,
+                        customerPhone: phone,
+                        customerEmail: email,
+                        address: address,
+                        paymentMethod: selectedGateway === 'flutterwave' ? 'Flutterwave Card/Transfer' : 'Paystack Card/Transfer',
+                        items: orderItems,
+                        total: grandTotal,
+                        status: 'pending' // Mark as pending initially
+                    });
+                    localStorage.setItem('pendingOrderId', orderId);
+                } catch (dbErr) {
+                    console.warn('Firebase pre-order log failed:', dbErr.message);
+                }
+
                 // Save order data to localStorage before redirect so we can
                 // retrieve it on return
                 localStorage.setItem('pendingOrder', JSON.stringify({
@@ -2039,23 +2057,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 cart = [];
                 saveCart();
                 updateCartUI();
+                const preLoggedOrderId = localStorage.getItem('pendingOrderId');
                 localStorage.removeItem('pendingOrder');
+                localStorage.removeItem('pendingOrderId');
 
                 // Clean URL so refresh doesn't re-trigger verification
                 const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
 
-                // Try to log order to Firebase (non-critical — don't block success on failure)
-                let orderId = `ORD-${Date.now().toString().slice(-4)}`;
-                try {
-                    const loggedOrder = await window.storeDb.addOrder({
+                // Try to log order to Firebase (non-critical — don't block success on failure/hangs)
+                let orderId = preLoggedOrderId || `ORD-${Date.now().toString().slice(-4)}`;
+                if (preLoggedOrderId) {
+                    window.storeDb.updateOrderStatus(preLoggedOrderId, 'paid').then(() => {
+                        console.log('Order status updated to paid in Firebase:', preLoggedOrderId);
+                    }).catch(dbErr => {
+                        console.warn('Firebase order status update failed (payment still confirmed):', dbErr.message);
+                    });
+                } else {
+                    window.storeDb.addOrder({
                         ...orderData,
                         paystackReference: reference,
                         status: 'paid'
-                    });
-                    orderId = loggedOrder.id;
-                } catch (dbErr) {
+                }).then(loggedOrder => {
+                    console.log('Order logged to Firebase:', loggedOrder.id);
+                        orderId = loggedOrder.id;
+                }).catch(dbErr => {
                     console.warn('Firebase order write failed (payment still confirmed):', dbErr.message);
+                });
                 }
 
                 // Send EmailJS Thank You Email via browser REST API (bypasses adblockers/script-prevention)
@@ -2221,24 +2249,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 cart = [];
                 saveCart();
                 updateCartUI();
+                const preLoggedOrderId = localStorage.getItem('pendingOrderId');
                 localStorage.removeItem('pendingOrder');
+                localStorage.removeItem('pendingOrderId');
 
                 // Clean URL so refresh doesn't re-trigger verification
                 const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
                 window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
 
-                // Log order to Firebase
-                let orderId = `ORD-${Date.now().toString().slice(-4)}`;
-                try {
-                    const loggedOrder = await window.storeDb.addOrder({
+                // Log order to Firebase (non-critical — don't block success on failure/hangs)
+                let orderId = preLoggedOrderId || `ORD-${Date.now().toString().slice(-4)}`;
+                if (preLoggedOrderId) {
+                    window.storeDb.updateOrderStatus(preLoggedOrderId, 'paid').then(() => {
+                        console.log('Order status updated to paid in Firebase:', preLoggedOrderId);
+                    }).catch(dbErr => {
+                        console.warn('Firebase order status update failed (payment still confirmed):', dbErr.message);
+                    });
+                } else {
+                    window.storeDb.addOrder({
                         ...orderData,
                         flutterwaveTransactionId: transactionId,
                         paymentMethod: 'Flutterwave Card/Transfer',
                         status: 'paid'
-                    });
-                    orderId = loggedOrder.id;
-                } catch (dbErr) {
+                }).then(loggedOrder => {
+                    console.log('Order logged to Firebase:', loggedOrder.id);
+                        orderId = loggedOrder.id;
+                }).catch(dbErr => {
                     console.warn('Firebase order write failed (payment still confirmed):', dbErr.message);
+                });
                 }
 
                 // Send EmailJS Thank You Email

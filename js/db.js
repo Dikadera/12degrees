@@ -114,19 +114,33 @@ const DEFAULT_CATEGORIES = [
     { id: '5', name: 'Intimate Care', title: 'Intimate <em>Care</em>' }
 ];
 
-// In-memory cache synced in real time
+// In-memory cache synced in real time (restored from localStorage cache if available for instant page load)
 let cachedProducts = [];
-let cachedOrders = [];
-let cachedReviews = [];
 let cachedCategories = [];
-let cachedViews = 0;
-let cachedDiscount = 10;
+let cachedReviews = [];
+try {
+    cachedProducts = JSON.parse(localStorage.getItem('12degrees_cached_products_snapshot') || '[]');
+    cachedCategories = JSON.parse(localStorage.getItem('12degrees_cached_categories_snapshot') || '[]');
+    cachedReviews = JSON.parse(localStorage.getItem('12degrees_cached_reviews_snapshot') || '[]');
+} catch (e) {
+    console.warn("Failed to parse localStorage snapshot cache:", e);
+}
 
-let productsLoaded = false;
-let ordersLoaded = false;
-let reviewsLoaded = false;
-let categoriesLoaded = false;
-let analyticsLoaded = false;
+// Fallback to defaults if cache is empty
+if (cachedCategories.length === 0) cachedCategories = DEFAULT_CATEGORIES;
+if (cachedReviews.length === 0) cachedReviews = DEFAULT_REVIEWS;
+
+const isAdminPage = typeof window !== 'undefined' && window.location && window.location.pathname && window.location.pathname.includes('admin.html');
+
+let cachedOrders = [];
+let cachedViews = Number(localStorage.getItem('12degrees_cached_views_snapshot') || 0);
+let cachedDiscount = Number(localStorage.getItem('12degrees_cached_discount_snapshot') || 10);
+
+let productsLoaded = cachedProducts.length > 0;
+let ordersLoaded = !isAdminPage; // Storefront doesn't load/need orders, so set to true immediately to resolve ready promise
+let reviewsLoaded = cachedReviews.length > 0;
+let categoriesLoaded = cachedCategories.length > 0;
+let analyticsLoaded = cachedViews > 0;
 
 // Expose a database readiness promise
 let resolveReady;
@@ -138,6 +152,121 @@ function checkReady() {
     if (productsLoaded && ordersLoaded && analyticsLoaded && reviewsLoaded && categoriesLoaded) {
         console.log("Firebase sync completed successfully!");
         resolveReady();
+    }
+}
+
+// REST Fallback for products, categories, reviews
+async function fetchRESTFallback(activeUser = null) {
+    console.log("🔄 Fetching latest products and categories via Firestore REST API...");
+    try {
+        const productsUrl = `/api/db/products?pageSize=300`;
+        const categoriesUrl = `/api/db/categories?pageSize=100`;
+        const reviewsUrl = `/api/db/reviews?pageSize=200`;
+        const ordersUrl = `/api/db/orders?pageSize=500`;
+        const viewsUrl = `/api/db/analytics/storefront`;
+
+        const parseDoc = (doc) => {
+            const id = doc.name.split('/').pop();
+            const fields = doc.fields || {};
+            const flat = { id };
+            for (const key in fields) {
+                const valObj = fields[key];
+                const type = Object.keys(valObj)[0];
+                let val = valObj[type];
+                if (type === 'integerValue') {
+                    val = parseInt(val, 10);
+                } else if (type === 'doubleValue') {
+                    val = parseFloat(val);
+                }
+                flat[key] = val;
+            }
+            return flat;
+        };
+
+        const headers = {};
+        const currentUser = activeUser || (auth ? auth.currentUser : null);
+        if (currentUser) {
+            try {
+                const token = await currentUser.getIdToken();
+                headers['Authorization'] = `Bearer ${token}`;
+            } catch (tokenErr) {
+                console.warn("Could not retrieve Firebase auth ID token:", tokenErr.message);
+            }
+        }
+
+        const [prodRes, catRes, revRes, ordRes, viewsRes] = await Promise.all([
+            fetch(productsUrl, { headers }).catch(err => { console.warn("Failed REST fetch products:", err); return null; }),
+            fetch(categoriesUrl, { headers }).catch(err => { console.warn("Failed REST fetch categories:", err); return null; }),
+            fetch(reviewsUrl, { headers }).catch(err => { console.warn("Failed REST fetch reviews:", err); return null; }),
+            isAdminPage ? fetch(ordersUrl, { headers }).catch(err => { console.warn("Failed REST fetch orders:", err); return null; }) : Promise.resolve(null),
+            isAdminPage ? fetch(viewsUrl, { headers }).catch(err => { console.warn("Failed REST fetch views:", err); return null; }) : Promise.resolve(null)
+        ]);
+
+        if (prodRes && prodRes.ok) {
+            const data = await prodRes.json();
+            if (data.documents) {
+                cachedProducts = data.documents.map(parseDoc);
+                console.log(`✅ Loaded ${cachedProducts.length} products via REST`);
+                localStorage.setItem('12degrees_cached_products_snapshot', JSON.stringify(cachedProducts));
+                productsLoaded = true;
+                window.dispatchEvent(new Event('db_products_updated'));
+            }
+        }
+
+        if (catRes && catRes.ok) {
+            const data = await catRes.json();
+            if (data.documents) {
+                cachedCategories = data.documents.map(parseDoc);
+                console.log(`✅ Loaded ${cachedCategories.length} categories via REST`);
+                localStorage.setItem('12degrees_cached_categories_snapshot', JSON.stringify(cachedCategories));
+                categoriesLoaded = true;
+                window.dispatchEvent(new Event('db_categories_updated'));
+            }
+        }
+
+        if (revRes && revRes.ok) {
+            const data = await revRes.json();
+            if (data.documents) {
+                cachedReviews = data.documents.map(parseDoc);
+                console.log(`✅ Loaded ${cachedReviews.length} reviews via REST`);
+                localStorage.setItem('12degrees_cached_reviews_snapshot', JSON.stringify(cachedReviews));
+                reviewsLoaded = true;
+                window.dispatchEvent(new Event('db_reviews_updated'));
+            }
+        }
+
+        if (ordRes && ordRes.ok) {
+            const data = await ordRes.json();
+            if (data.documents) {
+                cachedOrders = data.documents.map(parseDoc);
+                console.log(`✅ Loaded ${cachedOrders.length} orders via REST`);
+                ordersLoaded = true;
+                window.dispatchEvent(new Event('db_orders_updated'));
+            }
+        }
+
+        if (viewsRes && viewsRes.ok) {
+            const data = await viewsRes.json();
+            const flat = parseDoc(data);
+            cachedViews = flat.views || 0;
+            cachedDiscount = flat.discountPercentage || 10;
+            console.log(`✅ Loaded analytics views (${cachedViews}) and discount (${cachedDiscount}%) via REST`);
+            localStorage.setItem('12degrees_cached_views_snapshot', cachedViews);
+            localStorage.setItem('12degrees_cached_discount_snapshot', cachedDiscount);
+            analyticsLoaded = true;
+            window.dispatchEvent(new Event('db_analytics_updated'));
+        }
+
+        // Complete initialization flags
+        if (!productsLoaded) { cachedProducts = []; productsLoaded = true; }
+        if (!categoriesLoaded) { cachedCategories = DEFAULT_CATEGORIES; categoriesLoaded = true; }
+        if (!reviewsLoaded) { cachedReviews = DEFAULT_REVIEWS; reviewsLoaded = true; }
+        if (!ordersLoaded) { cachedOrders = DEFAULT_ORDERS; ordersLoaded = true; }
+        if (!analyticsLoaded) { cachedViews = 432; cachedDiscount = 10; analyticsLoaded = true; }
+
+        resolveReady();
+    } catch (err) {
+        console.error("❌ REST fetch failed:", err);
     }
 }
 
@@ -206,6 +335,9 @@ try {
             analyticsLoaded = false;
             reviewsLoaded = false;
 
+            // Trigger REST fallback to immediately reload cache using the new user session
+            fetchRESTFallback(user);
+
             if (firestoreDb) {
                 // 1. Categories
                 categoriesListenerUnsubscribe = onSnapshot(collection(firestoreDb, "categories"), async (snapshot) => {
@@ -219,7 +351,9 @@ try {
                                 console.error("Auto-seeding categories failed:", err);
                             }
                         }
-                        cachedCategories = DEFAULT_CATEGORIES;
+                        if (cachedCategories.length === 0) {
+                            cachedCategories = DEFAULT_CATEGORIES;
+                        }
                         categoriesLoaded = true;
                         checkReady();
                     } else {
@@ -230,7 +364,9 @@ try {
                     }
                 }, error => {
                     console.error("Categories subscription error: ", error);
-                    cachedCategories = DEFAULT_CATEGORIES;
+                    if (cachedCategories.length === 0) {
+                        cachedCategories = DEFAULT_CATEGORIES;
+                    }
                     categoriesLoaded = true;
                     checkReady();
                 });
@@ -247,7 +383,9 @@ try {
                                 console.error("Auto-seeding products failed:", err);
                             }
                         }
-                        cachedProducts = DEFAULT_PRODUCTS;
+                        if (cachedProducts.length === 0) {
+                            cachedProducts = DEFAULT_PRODUCTS;
+                        }
                         productsLoaded = true;
                         checkReady();
                     } else {
@@ -258,7 +396,9 @@ try {
                     }
                 }, error => {
                     console.error("Products subscription error: ", error);
-                    cachedProducts = DEFAULT_PRODUCTS;
+                    if (cachedProducts.length === 0) {
+                        cachedProducts = DEFAULT_PRODUCTS;
+                    }
                     productsLoaded = true;
                     checkReady();
                 });
@@ -275,7 +415,9 @@ try {
                                 console.error("Auto-seeding orders failed:", err);
                             }
                         }
-                        cachedOrders = DEFAULT_ORDERS;
+                        if (cachedOrders.length === 0) {
+                            cachedOrders = DEFAULT_ORDERS;
+                        }
                         ordersLoaded = true;
                         checkReady();
                     } else {
@@ -287,7 +429,9 @@ try {
                     }
                 }, error => {
                     console.error("Orders subscription error: ", error);
-                    cachedOrders = DEFAULT_ORDERS;
+                    if (cachedOrders.length === 0) {
+                        cachedOrders = DEFAULT_ORDERS;
+                    }
                     ordersLoaded = true;
                     checkReady();
                 });
@@ -304,8 +448,12 @@ try {
                                 console.error("Auto-seeding analytics failed:", err);
                             }
                         }
-                        cachedViews = 432;
-                        cachedDiscount = 10;
+                        if (cachedViews === undefined || cachedViews === 0) {
+                            cachedViews = 432;
+                        }
+                        if (cachedDiscount === undefined) {
+                            cachedDiscount = 10;
+                        }
                         analyticsLoaded = true;
                         checkReady();
                     } else {
@@ -317,8 +465,12 @@ try {
                     }
                 }, error => {
                     console.error("Analytics subscription error: ", error);
-                    cachedViews = 432;
-                    cachedDiscount = 10;
+                    if (cachedViews === undefined || cachedViews === 0) {
+                        cachedViews = 432;
+                    }
+                    if (cachedDiscount === undefined) {
+                        cachedDiscount = 10;
+                    }
                     analyticsLoaded = true;
                     checkReady();
                 });
@@ -335,7 +487,9 @@ try {
                                 console.error("Auto-seeding reviews failed:", err);
                             }
                         }
-                        cachedReviews = DEFAULT_REVIEWS;
+                        if (cachedReviews.length === 0) {
+                            cachedReviews = DEFAULT_REVIEWS;
+                        }
                         reviewsLoaded = true;
                         checkReady();
                     } else {
@@ -347,7 +501,9 @@ try {
                     }
                 }, error => {
                     console.error("Reviews subscription error: ", error);
-                    cachedReviews = DEFAULT_REVIEWS;
+                    if (cachedReviews.length === 0) {
+                        cachedReviews = DEFAULT_REVIEWS;
+                    }
                     reviewsLoaded = true;
                     checkReady();
                 });
@@ -397,6 +553,12 @@ try {
     reviewsLoaded = true;
     checkReady();
 }
+
+// Resolve ready promise synchronously on startup if cache is available
+checkReady();
+
+// Trigger REST API fetch immediately on startup in parallel with the SDK
+fetchRESTFallback();
 
 // Database operations
 const db = {
@@ -583,6 +745,17 @@ const db = {
         } catch (stockErr) {
             console.warn("Could not decrease product stock (expected for storefront customers under Option 2 secure rules):", stockErr.message);
         }
+        return newOrder;
+    },
+
+    async addOrderWithId(orderId, order) {
+        const newOrder = {
+            id: orderId,
+            date: new Date().toISOString(),
+            status: 'pending',
+            ...order
+        };
+        await setDoc(doc(firestoreDb, "orders", orderId), newOrder);
         return newOrder;
     },
 

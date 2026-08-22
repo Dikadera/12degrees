@@ -46,6 +46,9 @@ function initPaystackTransaction(email, amount, metadata, host) {
       });
     });
 
+    request.setTimeout(10000, () => {
+      request.destroy(new Error('Request to Paystack timed out after 10 seconds'));
+    });
     request.on('error', reject);
     request.write(postData);
     request.end();
@@ -87,6 +90,9 @@ function verifyPaystackTransaction(reference) {
       });
     });
 
+    request.setTimeout(10000, () => {
+      request.destroy(new Error('Request to Paystack timed out after 10 seconds'));
+    });
     request.on('error', reject);
     request.end();
   });
@@ -152,6 +158,9 @@ function initFlutterwaveTransaction(email, amount, metadata, host) {
       });
     });
 
+    request.setTimeout(10000, () => {
+      request.destroy(new Error('Request to Flutterwave timed out after 10 seconds'));
+    });
     request.on('error', reject);
     request.write(postData);
     request.end();
@@ -197,6 +206,9 @@ function verifyFlutterwaveTransaction(transactionId) {
       });
     });
 
+    request.setTimeout(10000, () => {
+      request.destroy(new Error('Request to Flutterwave timed out after 10 seconds'));
+    });
     request.on('error', reject);
     request.end();
   });
