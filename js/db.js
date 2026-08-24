@@ -5,7 +5,10 @@ import {
     getAuth,
     signInWithEmailAndPassword,
     signOut,
-    onAuthStateChanged
+    onAuthStateChanged,
+    updatePassword,
+    EmailAuthProvider,
+    reauthenticateWithCredential
 } from "firebase/auth";
 import { 
     getFirestore, 
@@ -947,6 +950,21 @@ const db = {
         const storageRef = ref(storage, `products/${filename}`);
         await uploadBytes(storageRef, file);
         return await getDownloadURL(storageRef);
+    },
+
+    /**
+     * Change the admin's Firebase Auth password.
+     * Requires the current password to re-authenticate first (Firebase security requirement).
+     */
+    async changeAdminPassword(currentPassword, newPassword) {
+        if (!auth || !auth.currentUser) {
+            throw new Error('You must be logged in to change your password.');
+        }
+        const user = auth.currentUser;
+        // Re-authenticate before updating password
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+        await reauthenticateWithCredential(user, credential);
+        await updatePassword(user, newPassword);
     },
 
     async resetDatabase() {

@@ -540,11 +540,66 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
+    // CHANGE PASSWORD
+    // ══════════════════════════════════════════════════════════════════════════
+    const changePasswordForm    = document.getElementById('change-password-form');
+    const newPasswordInput      = document.getElementById('new-password-input');
+    const confirmPasswordInput  = document.getElementById('confirm-password-input');
+
+    if (changePasswordForm) {
+        changePasswordForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPwd     = newPasswordInput.value.trim();
+            const confirmPwd = confirmPasswordInput.value.trim();
+
+            if (newPwd !== confirmPwd) {
+                await showAlert('Passwords do not match. Please try again.', 'Mismatch');
+                return;
+            }
+            if (newPwd.length < 8) {
+                await showAlert('Password must be at least 8 characters.', 'Too Short');
+                return;
+            }
+
+            const btn = changePasswordForm.querySelector('button[type="submit"]');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.textContent = 'Updating…';
+
+            // Firebase requires re-authentication — prompt admin for their current password
+            const currentPwd = window.prompt('Enter your CURRENT password to confirm:');
+            if (!currentPwd) {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                return;
+            }
+
+            try {
+                await window.storeDb.changeAdminPassword(currentPwd, newPwd);
+                changePasswordForm.reset();
+                await showAlert('Password updated successfully! Use your new password next time you log in.', 'Password Changed');
+            } catch (err) {
+                let msg = err.message;
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                    msg = 'Current password is incorrect. Please try again.';
+                } else if (err.code === 'auth/weak-password') {
+                    msg = 'New password is too weak. Please choose a stronger password.';
+                }
+                await showAlert('Failed to update password: ' + msg, 'Error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
     // KPI METRICS
     // ══════════════════════════════════════════════════════════════════════════
     function updateMetrics() {
-        const totalRev = orders.reduce((s, o) => s + Number(o.total || 0), 0);
-        const count    = orders.length;
+        const activeOrders = orders.filter(o => o.status !== 'pending');
+        const totalRev = activeOrders.reduce((s, o) => s + Number(o.total || 0), 0);
+        const count    = activeOrders.length;
         const avg      = count > 0 ? Math.round(totalRev / count) : 0;
         const views    = window.storeDb.getViews();
 
@@ -1099,6 +1154,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const q = orderSearchQuery.toLowerCase();
         const list = orders.filter(o => {
+            if (o.status === 'pending') return false;
             const okStatus = orderStatusFilter === 'all' || o.status === orderStatusFilter;
             const okSearch = (o.customerName || '').toLowerCase().includes(q) ||
                              (o.id || '').toLowerCase().includes(q) ||
@@ -1269,6 +1325,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td><strong>₦ ${formatMoney(order.total)}</strong></td>
                 <td style="text-align:right">
                     <div class="action-btns" style="justify-content:flex-end; gap: 8px;">
+                        <button class="action-btn mark-paid-btn" title="Mark as Paid" style="color:#16a34a;border-color:rgba(22,163,74,.2);font-size:11px;padding:0 8px;width:auto;min-width:72px;white-space:nowrap;font-weight:600;">
+                            ✓ Mark Paid
+                        </button>
                         <a href="${waLink}" target="_blank" class="action-btn view" title="WhatsApp Customer" style="color: #25D366; border-color: rgba(37, 211, 102, 0.15); text-decoration: none; display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: 1px solid;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
@@ -1283,6 +1342,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </td>`;
 
+            row.querySelector('.mark-paid-btn').addEventListener('click', async () => {
+                const btn = row.querySelector('.mark-paid-btn');
+                btn.disabled = true;
+                btn.textContent = 'Saving…';
+                try {
+                    await window.storeDb.updateOrderStatus(order.id, 'paid');
+                } catch (err) {
+                    await showAlert('Failed to update status: ' + err.message, 'Error');
+                    btn.disabled = false;
+                    btn.innerHTML = '✓ Mark Paid';
+                }
+            });
             row.querySelector('.view-details').addEventListener('click', () => openOrderDetails(order.id));
             row.querySelector('.delete-order').addEventListener('click', async () => {
                 const confirmed = await showAlert(`Are you sure you want to delete payment attempt log "${order.id}"?`, 'Confirm Delete', true);
@@ -1317,7 +1388,14 @@ document.addEventListener('DOMContentLoaded', () => {
         orderDetailsContent.innerHTML = `
             <div class="order-detail-header">
                 <div><strong>${order.id}</strong><br><span style="font-size:12px;color:var(--admin-text-muted)">${formatDate(order.date)}</span></div>
-                <span class="badge status-${order.status}" style="font-size:12px;padding:6px 12px">${order.status}</span>
+                <div>
+                    <select class="status-select status-${order.status}" id="detail-status-select-${order.id}" style="padding:6px 12px;font-size:12px;border-radius:var(--radius-md);">
+                        <option value="pending"    ${order.status==='pending'    ?'selected':''}>Pending</option>
+                        <option value="paid"       ${order.status==='paid'       ?'selected':''}>Paid</option>
+                        <option value="processing" ${order.status==='processing' ?'selected':''}>Processing</option>
+                        <option value="completed"  ${order.status==='completed'  ?'selected':''}>Completed</option>
+                    </select>
+                </div>
             </div>
             <div class="order-detail-sect">
                 <h4>Customer</h4>
@@ -1339,6 +1417,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <span>Chat via WhatsApp</span>
             </a>`;
+
+        const statusSelect = orderDetailsContent.querySelector(`#detail-status-select-${order.id}`);
+        if (statusSelect) {
+            statusSelect.addEventListener('change', async e => {
+                const newStatus = e.target.value;
+                try {
+                    await window.storeDb.updateOrderStatus(order.id, newStatus);
+                    orderModal.classList.remove('open');
+                    await showAlert('Order status updated successfully!', 'Success');
+                } catch (err) {
+                    alert('Failed to update status: ' + err.message);
+                }
+            });
+        }
+
         orderModal.classList.add('open');
     }
 
@@ -1358,6 +1451,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const customerMap = new Map();
 
         orders.forEach(order => {
+            if (order.status === 'pending') return;
             const phone = (order.customerPhone || '').trim();
             if (!phone) return;
 
@@ -1685,11 +1779,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ══════════════════════════════════════════════════════════════════════════
     function buildSalesData() {
         const labels = [], data = [];
+        const activeOrders = orders.filter(o => o.status !== 'pending');
         for (let i = 6; i >= 0; i--) {
             const d = new Date(); d.setDate(d.getDate() - i);
             labels.push(d.toLocaleDateString('en-US', {month:'short',day:'numeric'}));
             const ds = d.toDateString();
-            data.push(orders.filter(o => new Date(o.date).toDateString()===ds).reduce((s,o)=>s+Number(o.total || 0),0));
+            data.push(activeOrders.filter(o => new Date(o.date).toDateString()===ds).reduce((s,o)=>s+Number(o.total || 0),0));
         }
         return { labels, data };
     }
