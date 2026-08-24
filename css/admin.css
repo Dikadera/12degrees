@@ -27,7 +27,7 @@
 }
 
 html, body {
-    overflow-x: hidden !important;
+    overflow-x: auto !important;
     max-width: 100% !important;
     width: 100%;
     position: relative;
@@ -277,6 +277,11 @@ h1, h2, h3, h4 {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 36px;
+    position: sticky;
+    top: 0;
+    background: var(--admin-surface);
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
 
 .admin-header h1 {
@@ -460,7 +465,7 @@ h1, h2, h3, h4 {
     background-color: var(--admin-surface);
     border: 1px solid var(--admin-border);
     border-radius: var(--radius-md);
-    overflow: hidden;
+    overflow-x: auto !important;
 }
 
 .table-responsive {
@@ -815,7 +820,7 @@ tbody tr:hover {
         padding: 24px;
         width: 100%;
         max-width: 100vw;
-        overflow-x: hidden;
+        overflow-x: auto !important;
     }
     
     .admin-header {

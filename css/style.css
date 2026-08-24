@@ -133,7 +133,7 @@ body.dark-mode .section-label .label-text {
 
 html, body {
     scroll-behavior: smooth;
-    overflow-x: hidden !important;
+    overflow-x: clip !important;
     max-width: 100% !important;
     width: 100%;
     position: relative;
@@ -222,8 +222,7 @@ body.dark-mode .ticker-bar .ticker-dot {
     -webkit-backdrop-filter: none;
     border-bottom: 1px solid transparent;
     position: fixed;
-    top: 38px;
-    /* below ticker bar */
+    top: 0; /* stick to top */
     left: 0;
     right: 0;
     z-index: 100;
