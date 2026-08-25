@@ -7,7 +7,7 @@ const projectId = "degree-ce3ad";
 const authUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${apiKey}`;
 const payload = JSON.stringify({
     email: "admin@12degrees.store",
-    password: "admin", // Let's try default mock credentials
+    password: "123456", // Correct admin password
     returnSecureToken: true
 });
 

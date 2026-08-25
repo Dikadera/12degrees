@@ -31,11 +31,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
-    // 4. ORDERS: Customers can create orders. Only Admin can read, update status, and delete.
+    // 4. ORDERS: Customers can create orders and update status (needed to mark as paid after payment).
+    //    Only Admin can read all orders and delete them.
     match /orders/{id} {
       allow create: if true;
-      allow read, update: if isAdmin();
-      allow delete: if isAdmin();
+      allow update: if true;  // Allow status update from 'pending' -> 'paid' on storefront after payment
+      allow read, delete: if isAdmin();
     }
 
     // 5. ANALYTICS: Only Admin can access. Storefront page view increments allowed. PREVENT DELETION!
